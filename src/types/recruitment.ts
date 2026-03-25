@@ -51,20 +51,6 @@ export interface EODSheetRow {
   remarks: string;
 }
 
-export interface DailyCallingRow {
-  date: string;
-  candidateName: string;
-  contactNumber: string;
-  location: string;
-  client: string;
-  jobRole: string;
-  source: string;
-  callStatus: string;
-  linedUp: string;
-  remarks: string;
-  uniqueId: string;
-}
-
 export type TabId = 'dashboard' | 'candidates' | 'whatsapp' | 'briefing';
 
 export interface CandidateForWhatsApp {

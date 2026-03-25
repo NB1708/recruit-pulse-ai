@@ -1,6 +1,5 @@
-import type { MasterTrackerRow, SelectionSheetRow, EODSheetRow, DailyCallingRow } from '@/types/recruitment';
+import type { MasterTrackerRow, SelectionSheetRow, EODSheetRow } from '@/types/recruitment';
 
-// Demo data matching the Google Sheets schema
 const currentMonth = new Date().toLocaleString('default', { month: 'long' });
 const currentYear = new Date().getFullYear().toString();
 
@@ -46,22 +45,3 @@ export const DEMO_EOD_SHEET: EODSheetRow[] = [
   { date: daysAgo(0), recruiterName: 'Meena Kumari', totalCallsMade: 41, lineupsDone: 4, selections: 1, joinings: 0, remarks: 'Client calls' },
   { date: daysAgo(0), recruiterName: 'Sanjay Tiwari', totalCallsMade: 48, lineupsDone: 5, selections: 0, joinings: 1, remarks: 'Great progress' },
 ];
-
-export const DEMO_DAILY_CALLING: DailyCallingRow[] = [
-  { date: daysAgo(0), candidateName: 'Test Candidate 1', contactNumber: '9999999901', location: 'Delhi', client: 'Infosys', jobRole: 'React Dev', source: 'Naukri', callStatus: 'Connected', linedUp: 'Yes', remarks: 'Interested', uniqueId: 'DC001' },
-  { date: daysAgo(0), candidateName: 'Test Candidate 2', contactNumber: '9999999902', location: 'Mumbai', client: 'Wipro', jobRole: 'Java Dev', source: 'LinkedIn', callStatus: 'Not Reachable', linedUp: 'No', remarks: 'Try again', uniqueId: 'DC002' },
-  { date: daysAgo(0), candidateName: 'Test Candidate 3', contactNumber: '9999999903', location: 'Pune', client: 'HCL', jobRole: 'DevOps', source: 'Indeed', callStatus: 'Connected', linedUp: 'Yes', remarks: 'Scheduled', uniqueId: 'DC003' },
-  { date: daysAgo(0), candidateName: 'Test Candidate 4', contactNumber: '9999999904', location: 'Bangalore', client: 'Google', jobRole: 'ML Engineer', source: 'Referral', callStatus: 'Connected', linedUp: 'Yes', remarks: 'Strong profile', uniqueId: 'DC004' },
-  { date: daysAgo(0), candidateName: 'Test Candidate 5', contactNumber: '9999999905', location: 'Chennai', client: 'Amazon', jobRole: 'SDE', source: 'Naukri', callStatus: 'Busy', linedUp: 'No', remarks: 'Callback', uniqueId: 'DC005' },
-  { date: daysAgo(0), candidateName: 'Test Candidate 6', contactNumber: '9999999906', location: 'Hyderabad', client: 'Microsoft', jobRole: 'Azure Dev', source: 'Monster', callStatus: 'Connected', linedUp: 'Yes', remarks: 'Ready to move', uniqueId: 'DC006' },
-  { date: daysAgo(0), candidateName: 'Test Candidate 7', contactNumber: '9999999907', location: 'Noida', client: 'Accenture', jobRole: 'Consultant', source: 'LinkedIn', callStatus: 'Not Interested', linedUp: 'No', remarks: 'High CTC', uniqueId: 'DC007' },
-  { date: daysAgo(0), candidateName: 'Test Candidate 8', contactNumber: '9999999908', location: 'Gurgaon', client: 'Paytm', jobRole: 'PM', source: 'Referral', callStatus: 'Connected', linedUp: 'Yes', remarks: 'Screening done', uniqueId: 'DC008' },
-];
-
-export function getSourceBreakdown(callingData: DailyCallingRow[]): Record<string, number> {
-  const counts: Record<string, number> = {};
-  callingData.forEach(row => {
-    counts[row.source] = (counts[row.source] || 0) + 1;
-  });
-  return counts;
-}
