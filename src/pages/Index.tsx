@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
-import ApiKeyModal from '@/components/ApiKeyModal';
+import { useEffect, useState } from 'react';
+import { Header } from '@/components/Header';
+import { Footer } from '@/components/Footer';
+import { ApiKeyModal } from '@/components/ApiKeyModal';
 import GoogleSheetsPanel from '@/components/GoogleSheetsPanel';
 import DashboardTab from '@/components/tabs/DashboardTab';
 import CandidatesTab from '@/components/tabs/CandidatesTab';
@@ -14,9 +14,26 @@ import type { CandidateForWhatsApp, TabId } from '@/types/recruitment';
 const Index = () => {
   const [activeTab, setActiveTab] = useState<TabId>('dashboard');
   const [selectedCandidate, setSelectedCandidate] = useState<CandidateForWhatsApp | null>(null);
+  const [apiModalOpen, setApiModalOpen] = useState(false);
 
   const { loading: aiLoading, error: aiError, generate, setupKey } = useGemini();
   const { master, selection, eod, daily, loading: sheetLoading, error: sheetError, connected, connectGoogleSheets } = useRecruitmentData();
+
+  useEffect(() => {
+    const stored = sessionStorage.getItem('gemini_api_key');
+    if (stored) {
+      setupKey(stored);
+      setApiModalOpen(false);
+    } else {
+      setApiModalOpen(true);
+    }
+  }, [setupKey]);
+
+  const handleApiSubmit = (key: string) => {
+    sessionStorage.setItem('gemini_api_key', key);
+    setupKey(key);
+    setApiModalOpen(false);
+  };
 
   const onSelectCandidate = (candidate: CandidateForWhatsApp) => {
     setSelectedCandidate(candidate);
@@ -25,16 +42,11 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <ApiKeyModal onSubmit={setupKey} />
+      <ApiKeyModal open={apiModalOpen} onSubmit={handleApiSubmit} />
       <Header activeTab={activeTab} onTabChange={setActiveTab} />
 
       <main className="mx-auto max-w-[940px] space-y-4 px-4 py-6">
-        <GoogleSheetsPanel
-          connected={connected}
-          loading={sheetLoading}
-          error={sheetError}
-          onConnect={connectGoogleSheets}
-        />
+        <GoogleSheetsPanel connected={connected} loading={sheetLoading} error={sheetError} onConnect={connectGoogleSheets} />
 
         {activeTab === 'dashboard' && (
           <DashboardTab
@@ -48,12 +60,7 @@ const Index = () => {
           />
         )}
 
-        {activeTab === 'candidates' && (
-          <CandidatesTab
-            masterData={master}
-            onSelectCandidate={onSelectCandidate}
-          />
-        )}
+        {activeTab === 'candidates' && <CandidatesTab masterData={master} onSelectCandidate={onSelectCandidate} />}
 
         {activeTab === 'whatsapp' && (
           <WhatsAppTab
@@ -77,9 +84,7 @@ const Index = () => {
         )}
       </main>
 
-      <div className="mx-auto max-w-[940px] px-4">
-        <Footer />
-      </div>
+      <Footer />
     </div>
   );
 };
