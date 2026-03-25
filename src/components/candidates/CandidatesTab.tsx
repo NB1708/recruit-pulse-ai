@@ -22,12 +22,16 @@ function daysBetween(dateStr: string): number {
   return Math.floor((new Date().getTime() - new Date(dateStr).getTime()) / (1000 * 60 * 60 * 24));
 }
 
+const currentMonth = new Date().toLocaleString('default', { month: 'long' });
+
 export function CandidatesTab({ masterData, onSelectCandidate }: CandidatesTabProps) {
   const [recruiterFilter, setRecruiterFilter] = useState('all');
   const [stageFilter, setStageFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [monthFilter, setMonthFilter] = useState(currentMonth);
   const [search, setSearch] = useState('');
 
+  const months = useMemo(() => [...new Set(masterData.map(r => r.month).filter(Boolean))], [masterData]);
   const recruiters = useMemo(() => [...new Set(masterData.map(r => r.recruiter))], [masterData]);
   const stages = useMemo(() => [...new Set(masterData.map(r => r.stage))], [masterData]);
   const statuses = useMemo(() => [...new Set(masterData.map(r => r.clientStatus))], [masterData]);
@@ -35,12 +39,13 @@ export function CandidatesTab({ masterData, onSelectCandidate }: CandidatesTabPr
   const filtered = useMemo(() => {
     return masterData
       .filter(r => r.stage !== 'Joined')
+      .filter(r => monthFilter === 'all' || r.month === monthFilter)
       .filter(r => recruiterFilter === 'all' || r.recruiter === recruiterFilter)
       .filter(r => stageFilter === 'all' || r.stage === stageFilter)
       .filter(r => statusFilter === 'all' || r.clientStatus === statusFilter)
       .filter(r => search === '' || r.candidateName.toLowerCase().includes(search.toLowerCase()) || r.role.toLowerCase().includes(search.toLowerCase()))
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [masterData, recruiterFilter, stageFilter, statusFilter, search]);
+  }, [masterData, monthFilter, recruiterFilter, stageFilter, statusFilter, search]);
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -51,6 +56,15 @@ export function CandidatesTab({ masterData, onSelectCandidate }: CandidatesTabPr
           onChange={(e) => setSearch(e.target.value)}
           className="w-48 bg-card border-border text-foreground placeholder:text-muted-foreground"
         />
+        <Select value={monthFilter} onValueChange={setMonthFilter}>
+          <SelectTrigger className="w-36 bg-card border-border text-foreground">
+            <SelectValue placeholder="Month" />
+          </SelectTrigger>
+          <SelectContent className="bg-card border-border">
+            <SelectItem value="all">All Months</SelectItem>
+            {months.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+          </SelectContent>
+        </Select>
         <Select value={recruiterFilter} onValueChange={setRecruiterFilter}>
           <SelectTrigger className="w-40 bg-card border-border text-foreground">
             <SelectValue placeholder="Recruiter" />
