@@ -91,13 +91,13 @@ Be specific, use numbers, suggest exactly what to do. Use emojis. Keep under 150
             </div>
           )}
         </div>
-        <ClientStatusChart masterData={masterData} />
+        <ClientStatusChart masterData={filteredMaster} />
       </div>
 
-      <RecruiterLeaderboard eodData={eodData} />
+      <RecruiterLeaderboard eodData={filteredEod} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <UrgentCandidates masterData={masterData} />
+        <UrgentCandidates masterData={filteredMaster} />
         <SourceBreakdown sourceData={sourceData} />
       </div>
     </div>
