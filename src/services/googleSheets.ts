@@ -1,4 +1,4 @@
-import type { DailyCallingRow, EODSheetRow, MasterTrackerRow, SelectionSheetRow } from '@/types/recruitment';
+import type { EODSheetRow, MasterTrackerRow, SelectionSheetRow } from '@/types/recruitment';
 
 declare global {
   interface Window {
@@ -94,27 +94,6 @@ function parseEod(values: string[][]): EODSheetRow[] {
   });
 }
 
-function parseDailyCalling(values: string[][]): DailyCallingRow[] {
-  if (!values.length) return [];
-  const [headers, ...rows] = values;
-  return rows.filter(r => r.some(Boolean)).map((row) => {
-    const rec = rowToRecord(headers, row);
-    return {
-      date: rec['date'] || '',
-      candidateName: rec['candidate name'] || '',
-      contactNumber: rec['contact number'] || '',
-      location: rec['location'] || '',
-      client: rec['client'] || '',
-      jobRole: rec['job role'] || '',
-      source: rec['source'] || '',
-      callStatus: rec['call status'] || '',
-      linedUp: rec['lined-up (yes/no)'] || rec['lined-up'] || rec['lined up'] || '',
-      remarks: rec['remarks'] || '',
-      uniqueId: rec['unique id'] || '',
-    };
-  });
-}
-
 async function loadGoogleIdentityScript(): Promise<void> {
   if (window.google?.accounts?.oauth2) return;
   await new Promise<void>((resolve, reject) => {
@@ -159,38 +138,20 @@ async function fetchValues(spreadsheetId: string, range: string, accessToken: st
   return json.values ?? [];
 }
 
-async function fetchSheetTitles(spreadsheetId: string, accessToken: string): Promise<string[]> {
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}?fields=sheets(properties(title))`;
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Sheets metadata failed [${res.status}] ${text}`);
-  }
-  const json = await res.json();
-  return (json.sheets ?? []).map((s: any) => s.properties?.title).filter(Boolean);
-}
-
 export async function fetchRecruitmentSheets(spreadsheetId: string, accessToken: string): Promise<{
   master: MasterTrackerRow[];
   selection: SelectionSheetRow[];
   eod: EODSheetRow[];
-  daily: DailyCallingRow[];
 }> {
-  const [masterValues, selectionValues, eodValues, titles] = await Promise.all([
+  const [masterValues, selectionValues, eodValues] = await Promise.all([
     fetchValues(spreadsheetId, 'MASTER TRACKER!A:T', accessToken),
     fetchValues(spreadsheetId, 'SELECTION SHEET!A:Q', accessToken),
     fetchValues(spreadsheetId, 'EOD SHEET!A:G', accessToken),
-    fetchSheetTitles(spreadsheetId, accessToken),
   ]);
-
-  const dailySheetTitles = titles.filter((t) => t.toUpperCase().includes('DAILY CALLING'));
-  const dailySheets = await Promise.all(dailySheetTitles.map((title) => fetchValues(spreadsheetId, `${title}!A:K`, accessToken)));
-  const mergedDailyValues = dailySheets.flat();
 
   return {
     master: parseMasterTracker(masterValues),
     selection: parseSelection(selectionValues),
     eod: parseEod(eodValues),
-    daily: parseDailyCalling(mergedDailyValues),
   };
 }

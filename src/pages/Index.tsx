@@ -17,21 +17,23 @@ const Index = () => {
   const [apiModalOpen, setApiModalOpen] = useState(false);
 
   const { loading: aiLoading, error: aiError, generate, setupKey } = useGemini();
-  const { master, selection, eod, daily, loading: sheetLoading, error: sheetError, connected, connectGoogleSheets } = useRecruitmentData();
+  const { master, selection, eod, loading: sheetLoading, error: sheetError, connected, connectGoogleSheets } = useRecruitmentData();
 
   useEffect(() => {
-    const stored = sessionStorage.getItem('gemini_api_key');
-    if (stored) {
-      setupKey(stored);
+    const storedKey = sessionStorage.getItem('gemini_api_key');
+    const storedSheet = sessionStorage.getItem('gp_sheet_id');
+    if (storedKey && storedSheet) {
+      setupKey(storedKey);
       setApiModalOpen(false);
     } else {
       setApiModalOpen(true);
     }
   }, [setupKey]);
 
-  const handleApiSubmit = (key: string) => {
-    sessionStorage.setItem('gemini_api_key', key);
-    setupKey(key);
+  const handleSetup = (apiKey: string, spreadsheetId: string) => {
+    sessionStorage.setItem('gemini_api_key', apiKey);
+    sessionStorage.setItem('gp_sheet_id', spreadsheetId);
+    setupKey(apiKey);
     setApiModalOpen(false);
   };
 
@@ -42,7 +44,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <ApiKeyModal open={apiModalOpen} onSubmit={handleApiSubmit} />
+      <ApiKeyModal open={apiModalOpen} onSubmit={handleSetup} />
       <Header activeTab={activeTab} onTabChange={setActiveTab} />
 
       <main className="mx-auto max-w-[940px] space-y-4 px-4 py-6">
@@ -53,7 +55,6 @@ const Index = () => {
             masterData={master}
             selectionData={selection}
             eodData={eod}
-            dailyData={daily}
             onAiAnalyze={generate}
             aiLoading={aiLoading}
             aiError={aiError}
