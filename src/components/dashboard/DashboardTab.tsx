@@ -1,15 +1,15 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Bot } from 'lucide-react';
 import { AiSpinner } from '@/components/AiSpinner';
-import type { MasterTrackerRow, EODSheetRow } from '@/types/recruitment';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import type { MasterTrackerRow, EODSheetRow, SelectionSheetRow } from '@/types/recruitment';
 import { StatCards } from './StatCards';
 import { HiringFunnel } from './HiringFunnel';
 import { ClientStatusChart } from './ClientStatusChart';
 import { RecruiterLeaderboard } from './RecruiterLeaderboard';
 import { UrgentCandidates } from './UrgentCandidates';
 import { SourceBreakdown } from './SourceBreakdown';
-import type { SelectionSheetRow } from '@/types/recruitment';
 
 interface DashboardTabProps {
   masterData: MasterTrackerRow[];
@@ -20,8 +20,27 @@ interface DashboardTabProps {
   aiLoading: boolean;
 }
 
+const currentMonth = new Date().toLocaleString('default', { month: 'long' });
+
 export function DashboardTab({ masterData, selectionData, eodData, sourceData, onAiAnalyze, aiLoading }: DashboardTabProps) {
   const [aiInsight, setAiInsight] = useState<string | null>(null);
+  const [monthFilter, setMonthFilter] = useState(currentMonth);
+
+  const months = useMemo(() => [...new Set(masterData.map(r => r.month).filter(Boolean))], [masterData]);
+
+  const filteredMaster = useMemo(() =>
+    monthFilter === 'all' ? masterData : masterData.filter(r => r.month === monthFilter),
+    [masterData, monthFilter]
+  );
+  const filteredSelection = useMemo(() =>
+    monthFilter === 'all' ? selectionData : selectionData.filter(r => r.month === monthFilter),
+    [selectionData, monthFilter]
+  );
+  const filteredEod = useMemo(() => {
+    if (monthFilter === 'all') return eodData;
+    const monthIdx = new Date(`${monthFilter} 1, 2025`).getMonth();
+    return eodData.filter(r => new Date(r.date).getMonth() === monthIdx);
+  }, [eodData, monthFilter]);
 
   const handleAnalyze = async () => {
     const stages: Record<string, number> = {};
@@ -42,7 +61,19 @@ Be specific, use numbers, suggest exactly what to do. Use emojis. Keep under 150
 
   return (
     <div className="space-y-4 animate-fade-in">
-      <StatCards masterData={masterData} selectionData={selectionData} />
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-display font-bold text-foreground">Dashboard</h2>
+        <Select value={monthFilter} onValueChange={setMonthFilter}>
+          <SelectTrigger className="w-40 bg-card border-border text-foreground">
+            <SelectValue placeholder="Month" />
+          </SelectTrigger>
+          <SelectContent className="bg-card border-border">
+            <SelectItem value="all">All Months</SelectItem>
+            {months.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
+      <StatCards masterData={filteredMaster} selectionData={filteredSelection} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-4">
