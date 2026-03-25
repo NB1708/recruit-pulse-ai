@@ -138,15 +138,19 @@ async function fetchValues(spreadsheetId: string, range: string, accessToken: st
   return json.values ?? [];
 }
 
-export async function fetchRecruitmentSheets(spreadsheetId: string, accessToken: string): Promise<{
+export async function fetchRecruitmentSheets(
+  masterSheetId: string,
+  selectionEodSheetId: string,
+  accessToken: string
+): Promise<{
   master: MasterTrackerRow[];
   selection: SelectionSheetRow[];
   eod: EODSheetRow[];
 }> {
   const [masterValues, selectionValues, eodValues] = await Promise.all([
-    fetchValues(spreadsheetId, 'MASTER TRACKER!A:T', accessToken),
-    fetchValues(spreadsheetId, 'SELECTION SHEET!A:Q', accessToken),
-    fetchValues(spreadsheetId, 'EOD SHEET!A:G', accessToken),
+    fetchValues(masterSheetId, 'MASTER TRACKER!A:T', accessToken),
+    fetchValues(selectionEodSheetId, 'SELECTION SHEET!A:Q', accessToken),
+    fetchValues(selectionEodSheetId, 'EOD SHEET!A:G', accessToken),
   ]);
 
   return {
