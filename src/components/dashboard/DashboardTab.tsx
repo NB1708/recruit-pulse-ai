@@ -44,14 +44,14 @@ export function DashboardTab({ masterData, selectionData, eodData, sourceData, o
 
   const handleAnalyze = async () => {
     const stages: Record<string, number> = {};
-    masterData.forEach(r => { stages[r.stage] = (stages[r.stage] || 0) + 1; });
-    const recruiterStats = eodData.map(r => `${r.recruiterName}: ${r.totalCallsMade} calls, ${r.lineupsDone} lineups, ${r.selections} selections`).join('; ');
+    filteredMaster.forEach(r => { stages[r.stage] = (stages[r.stage] || 0) + 1; });
+    const recruiterStats = filteredEod.map(r => `${r.recruiterName}: ${r.totalCallsMade} calls, ${r.lineupsDone} lineups, ${r.selections} selections`).join('; ');
 
     const prompt = `You are RecruitPulse AI, an analytics engine for Hunar.AI's recruitment team managed by Nikita Berwal. Analyze this pipeline data and provide 3-4 key insights with actionable recommendations.
 
 Funnel counts: ${JSON.stringify(stages)}
 Recruiter performance today: ${recruiterStats}
-Total active pipeline: ${masterData.filter(r => r.stage !== 'Joined').length}
+Total active pipeline: ${filteredMaster.filter(r => r.stage !== 'Joined').length}
 
 Be specific, use numbers, suggest exactly what to do. Use emojis. Keep under 150 words.`;
 
@@ -77,7 +77,7 @@ Be specific, use numbers, suggest exactly what to do. Use emojis. Keep under 150
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-4">
-          <HiringFunnel masterData={masterData} />
+          <HiringFunnel masterData={filteredMaster} />
           <div className="flex items-center gap-3">
             <Button onClick={handleAnalyze} disabled={aiLoading} className="bg-primary text-primary-foreground hover:bg-primary/90 font-display">
               <Bot className="h-4 w-4 mr-2" />
