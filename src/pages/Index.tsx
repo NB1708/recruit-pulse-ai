@@ -21,8 +21,9 @@ const Index = () => {
 
   useEffect(() => {
     const storedKey = sessionStorage.getItem('gemini_api_key');
-    const storedSheet = sessionStorage.getItem('gp_sheet_id');
-    if (storedKey && storedSheet) {
+    const storedMaster = sessionStorage.getItem('gp_master_sheet_id');
+    const storedSelectionEod = sessionStorage.getItem('gp_selection_eod_sheet_id');
+    if (storedKey && storedMaster && storedSelectionEod) {
       setupKey(storedKey);
       setApiModalOpen(false);
     } else {
@@ -30,9 +31,10 @@ const Index = () => {
     }
   }, [setupKey]);
 
-  const handleSetup = (apiKey: string, spreadsheetId: string) => {
+  const handleSetup = (apiKey: string, masterSheetId: string, selectionEodSheetId: string) => {
     sessionStorage.setItem('gemini_api_key', apiKey);
-    sessionStorage.setItem('gp_sheet_id', spreadsheetId);
+    sessionStorage.setItem('gp_master_sheet_id', masterSheetId);
+    sessionStorage.setItem('gp_selection_eod_sheet_id', selectionEodSheetId);
     setupKey(apiKey);
     setApiModalOpen(false);
   };

@@ -8,22 +8,23 @@ interface GoogleSheetsPanelProps {
   connected: boolean;
   loading: boolean;
   error: string | null;
-  onConnect: (clientId: string, spreadsheetId: string) => Promise<void>;
+  onConnect: (clientId: string, masterSheetId: string, selectionEodSheetId: string) => Promise<void>;
 }
 
 export default function GoogleSheetsPanel({ connected, loading, error, onConnect }: GoogleSheetsPanelProps) {
   const [clientId, setClientId] = useState(sessionStorage.getItem('gp_client_id') || '');
-  const [sheetId, setSheetId] = useState(sessionStorage.getItem('gp_sheet_id') || '');
+  const [masterSheetId, setMasterSheetId] = useState(sessionStorage.getItem('gp_master_sheet_id') || '');
+  const [selectionEodSheetId, setSelectionEodSheetId] = useState(sessionStorage.getItem('gp_selection_eod_sheet_id') || '');
 
   const connect = async () => {
-    if (!clientId.trim() || !sheetId.trim()) return;
-    await onConnect(clientId.trim(), sheetId.trim());
+    if (!clientId.trim() || !masterSheetId.trim() || !selectionEodSheetId.trim()) return;
+    await onConnect(clientId.trim(), masterSheetId.trim(), selectionEodSheetId.trim());
   };
 
   return (
     <Card className="border-border bg-card">
       <CardContent className="p-4">
-        <div className="grid gap-2 md:grid-cols-[1.3fr_1fr_auto]">
+        <div className="grid gap-2 md:grid-cols-[1.3fr_1fr_1fr_auto]">
           <Input
             value={clientId}
             onChange={(e) => setClientId(e.target.value)}
@@ -31,9 +32,15 @@ export default function GoogleSheetsPanel({ connected, loading, error, onConnect
             className="border-border bg-secondary text-foreground"
           />
           <Input
-            value={sheetId}
-            onChange={(e) => setSheetId(e.target.value)}
-            placeholder="Google Spreadsheet ID"
+            value={masterSheetId}
+            onChange={(e) => setMasterSheetId(e.target.value)}
+            placeholder="Master Tracker Sheet ID"
+            className="border-border bg-secondary text-foreground"
+          />
+          <Input
+            value={selectionEodSheetId}
+            onChange={(e) => setSelectionEodSheetId(e.target.value)}
+            placeholder="Selection & EOD Sheet ID"
             className="border-border bg-secondary text-foreground"
           />
           <Button onClick={connect} disabled={loading} className="bg-primary text-primary-foreground hover:bg-primary/90">
