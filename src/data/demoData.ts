@@ -1,0 +1,67 @@
+import type { MasterTrackerRow, SelectionSheetRow, EODSheetRow, DailyCallingRow } from '@/types/recruitment';
+
+// Demo data matching the Google Sheets schema
+const currentMonth = new Date().toLocaleString('default', { month: 'long' });
+const currentYear = new Date().getFullYear().toString();
+
+function daysAgo(n: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  return d.toISOString().split('T')[0];
+}
+
+export const DEMO_MASTER_TRACKER: MasterTrackerRow[] = [
+  { stage: 'Process', clientStatus: 'Telephonic', year: currentYear, month: currentMonth, date: daysAgo(2), tl: 'Nikita', am: 'AM1', recruiter: 'Priya Sharma', organisation: 'Infosys', role: 'React Developer', location: 'Bangalore', candidateName: 'Amit Kumar', contact: '9876543210', emailId: 'amit@gmail.com', totalExperience: '4', ctc: '8 LPA', expected: '12 LPA', noticePeriod: '30 days', currentCompany: 'TCS', status: 'Active' },
+  { stage: 'Feedback Pending', clientStatus: 'Feedback Pending', year: currentYear, month: currentMonth, date: daysAgo(8), tl: 'Nikita', am: 'AM1', recruiter: 'Rahul Verma', organisation: 'Wipro', role: 'Java Backend', location: 'Hyderabad', candidateName: 'Sneha Patel', contact: '9876543211', emailId: 'sneha@gmail.com', totalExperience: '6', ctc: '12 LPA', expected: '18 LPA', noticePeriod: '60 days', currentCompany: 'Cognizant', status: 'Active' },
+  { stage: 'CV Shortlisted', clientStatus: 'CV Shortlisted', year: currentYear, month: currentMonth, date: daysAgo(3), tl: 'Nikita', am: 'AM2', recruiter: 'Anita Singh', organisation: 'HCL', role: 'DevOps Engineer', location: 'Noida', candidateName: 'Rajesh Gupta', contact: '9876543212', emailId: 'rajesh@gmail.com', totalExperience: '5', ctc: '10 LPA', expected: '15 LPA', noticePeriod: '45 days', currentCompany: 'Mindtree', status: 'Active' },
+  { stage: 'Feedback Pending', clientStatus: 'Feedback Pending', year: currentYear, month: currentMonth, date: daysAgo(10), tl: 'Nikita', am: 'AM1', recruiter: 'Deepak Yadav', organisation: 'Accenture', role: 'Python Developer', location: 'Pune', candidateName: 'Kavita Joshi', contact: '9876543213', emailId: 'kavita@gmail.com', totalExperience: '3', ctc: '6 LPA', expected: '10 LPA', noticePeriod: '30 days', currentCompany: 'Capgemini', status: 'Active' },
+  { stage: 'Process', clientStatus: 'VC', year: currentYear, month: currentMonth, date: daysAgo(1), tl: 'Nikita', am: 'AM2', recruiter: 'Priya Sharma', organisation: 'Google', role: 'ML Engineer', location: 'Bangalore', candidateName: 'Vikram Reddy', contact: '9876543214', emailId: 'vikram@gmail.com', totalExperience: '7', ctc: '20 LPA', expected: '30 LPA', noticePeriod: '90 days', currentCompany: 'Amazon', status: 'Active' },
+  { stage: 'Feedback Pending', clientStatus: 'Feedback Pending', year: currentYear, month: currentMonth, date: daysAgo(12), tl: 'Nikita', am: 'AM1', recruiter: 'Meena Kumari', organisation: 'Microsoft', role: 'Full Stack Dev', location: 'Delhi', candidateName: 'Arjun Malhotra', contact: '9876543215', emailId: 'arjun@gmail.com', totalExperience: '5', ctc: '14 LPA', expected: '22 LPA', noticePeriod: '60 days', currentCompany: 'Flipkart', status: 'Active' },
+  { stage: 'Process', clientStatus: 'F2F', year: currentYear, month: currentMonth, date: daysAgo(4), tl: 'Nikita', am: 'AM2', recruiter: 'Sanjay Tiwari', organisation: 'Paytm', role: 'Product Manager', location: 'Gurgaon', candidateName: 'Neha Agarwal', contact: '9876543216', emailId: 'neha@gmail.com', totalExperience: '8', ctc: '22 LPA', expected: '28 LPA', noticePeriod: '30 days', currentCompany: 'PhonePe', status: 'Active' },
+  { stage: 'CV Shortlisted', clientStatus: 'CV Shortlisted', year: currentYear, month: currentMonth, date: daysAgo(6), tl: 'Nikita', am: 'AM1', recruiter: 'Rahul Verma', organisation: 'Zomato', role: 'Data Analyst', location: 'Mumbai', candidateName: 'Pooja Mishra', contact: '9876543217', emailId: 'pooja@gmail.com', totalExperience: '2', ctc: '5 LPA', expected: '8 LPA', noticePeriod: '15 days', currentCompany: 'Deloitte', status: 'Active' },
+  { stage: 'Joined', clientStatus: 'Joined', year: currentYear, month: currentMonth, date: daysAgo(15), tl: 'Nikita', am: 'AM2', recruiter: 'Anita Singh', organisation: 'Swiggy', role: 'iOS Developer', location: 'Bangalore', candidateName: 'Rohit Sharma', contact: '9876543218', emailId: 'rohit@gmail.com', totalExperience: '4', ctc: '9 LPA', expected: '14 LPA', noticePeriod: '30 days', currentCompany: 'Ola', status: 'Joined' },
+  { stage: 'Uselater', clientStatus: 'Uselater', year: currentYear, month: currentMonth, date: daysAgo(20), tl: 'Nikita', am: 'AM1', recruiter: 'Deepak Yadav', organisation: 'Razorpay', role: 'QA Engineer', location: 'Pune', candidateName: 'Sita Ram', contact: '9876543219', emailId: 'sita@gmail.com', totalExperience: '3', ctc: '7 LPA', expected: '10 LPA', noticePeriod: '30 days', currentCompany: 'Infosys', status: 'Parked' },
+  { stage: 'Process', clientStatus: 'Finals', year: currentYear, month: currentMonth, date: daysAgo(5), tl: 'Nikita', am: 'AM2', recruiter: 'Meena Kumari', organisation: 'Freshworks', role: 'SRE', location: 'Chennai', candidateName: 'Manish Dubey', contact: '9876543220', emailId: 'manish@gmail.com', totalExperience: '6', ctc: '15 LPA', expected: '20 LPA', noticePeriod: '60 days', currentCompany: 'Zoho', status: 'Active' },
+  { stage: 'Process', clientStatus: 'Offered', year: currentYear, month: currentMonth, date: daysAgo(7), tl: 'Nikita', am: 'AM1', recruiter: 'Sanjay Tiwari', organisation: 'CRED', role: 'Frontend Dev', location: 'Bangalore', candidateName: 'Ritu Chauhan', contact: '9876543221', emailId: 'ritu@gmail.com', totalExperience: '4', ctc: '11 LPA', expected: '16 LPA', noticePeriod: '30 days', currentCompany: 'Myntra', status: 'Active' },
+  { stage: 'Feedback Pending', clientStatus: 'Feedback Pending', year: currentYear, month: currentMonth, date: daysAgo(9), tl: 'Nikita', am: 'AM2', recruiter: 'Priya Sharma', organisation: 'Uber', role: 'Backend Engineer', location: 'Hyderabad', candidateName: 'Suresh Iyer', contact: '9876543222', emailId: 'suresh@gmail.com', totalExperience: '5', ctc: '13 LPA', expected: '19 LPA', noticePeriod: '45 days', currentCompany: 'Grab', status: 'Active' },
+  { stage: 'Joined', clientStatus: 'Joined', year: currentYear, month: currentMonth, date: daysAgo(18), tl: 'Nikita', am: 'AM1', recruiter: 'Priya Sharma', organisation: 'Flipkart', role: 'Android Dev', location: 'Bangalore', candidateName: 'Anil Prasad', contact: '9876543223', emailId: 'anil@gmail.com', totalExperience: '3', ctc: '7 LPA', expected: '11 LPA', noticePeriod: '30 days', currentCompany: 'Samsung', status: 'Joined' },
+  { stage: 'Joined', clientStatus: 'Joined', year: currentYear, month: currentMonth, date: daysAgo(22), tl: 'Nikita', am: 'AM2', recruiter: 'Rahul Verma', organisation: 'Amazon', role: 'Cloud Engineer', location: 'Chennai', candidateName: 'Deepa Nair', contact: '9876543224', emailId: 'deepa@gmail.com', totalExperience: '6', ctc: '16 LPA', expected: '24 LPA', noticePeriod: '60 days', currentCompany: 'IBM', status: 'Joined' },
+];
+
+export const DEMO_SELECTION_SHEET: SelectionSheetRow[] = [
+  { srNo: '1', month: currentMonth, dateOfSelection: daysAgo(15), candidateName: 'Rohit Sharma', contactNumber: '9876543218', emailId: 'rohit@gmail.com', company: 'Swiggy', location: 'Bangalore', designation: 'iOS Developer', ctcOffered: '14 LPA', joiningDate: daysAgo(5), recruiter: 'Anita Singh', candidateStatus: 'Joined', leadSource: 'Naukri', joiningConfirmation: 'Yes', aiOrManualLead: 'AI', clientPocName: 'Rahul M' },
+  { srNo: '2', month: currentMonth, dateOfSelection: daysAgo(18), candidateName: 'Anil Prasad', contactNumber: '9876543223', emailId: 'anil@gmail.com', company: 'Flipkart', location: 'Bangalore', designation: 'Android Dev', ctcOffered: '11 LPA', joiningDate: daysAgo(8), recruiter: 'Priya Sharma', candidateStatus: 'Joined', leadSource: 'LinkedIn', joiningConfirmation: 'Yes', aiOrManualLead: 'Manual', clientPocName: 'Sonia K' },
+  { srNo: '3', month: currentMonth, dateOfSelection: daysAgo(22), candidateName: 'Deepa Nair', contactNumber: '9876543224', emailId: 'deepa@gmail.com', company: 'Amazon', location: 'Chennai', designation: 'Cloud Engineer', ctcOffered: '24 LPA', joiningDate: daysAgo(12), recruiter: 'Rahul Verma', candidateStatus: 'Joined', leadSource: 'Indeed', joiningConfirmation: 'Yes', aiOrManualLead: 'AI', clientPocName: 'Vinay P' },
+  { srNo: '4', month: currentMonth, dateOfSelection: daysAgo(10), candidateName: 'Ritu Chauhan', contactNumber: '9876543221', emailId: 'ritu@gmail.com', company: 'CRED', location: 'Bangalore', designation: 'Frontend Dev', ctcOffered: '16 LPA', joiningDate: daysAgo(2), recruiter: 'Sanjay Tiwari', candidateStatus: 'OL released', leadSource: 'Naukri', joiningConfirmation: 'Pending', aiOrManualLead: 'AI', clientPocName: 'Amit S' },
+  { srNo: '5', month: currentMonth, dateOfSelection: daysAgo(5), candidateName: 'Manish Dubey', contactNumber: '9876543220', emailId: 'manish@gmail.com', company: 'Freshworks', location: 'Chennai', designation: 'SRE', ctcOffered: '20 LPA', joiningDate: '', recruiter: 'Meena Kumari', candidateStatus: 'Salary Negotiation', leadSource: 'LinkedIn', joiningConfirmation: 'Pending', aiOrManualLead: 'Manual', clientPocName: 'Priya R' },
+  { srNo: '6', month: currentMonth, dateOfSelection: daysAgo(25), candidateName: 'Karan Singh', contactNumber: '9876543225', emailId: 'karan@gmail.com', company: 'Paytm', location: 'Gurgaon', designation: 'Product Analyst', ctcOffered: '12 LPA', joiningDate: '', recruiter: 'Deepak Yadav', candidateStatus: 'Backout', leadSource: 'Referral', joiningConfirmation: 'No', aiOrManualLead: 'Manual', clientPocName: 'Neha G' },
+  { srNo: '7', month: currentMonth, dateOfSelection: daysAgo(14), candidateName: 'Swati Mehta', contactNumber: '9876543226', emailId: 'swati@gmail.com', company: 'Zomato', location: 'Mumbai', designation: 'Data Scientist', ctcOffered: '18 LPA', joiningDate: '', recruiter: 'Anita Singh', candidateStatus: 'Dropout', leadSource: 'Monster', joiningConfirmation: 'No', aiOrManualLead: 'AI', clientPocName: 'Raj K' },
+];
+
+export const DEMO_EOD_SHEET: EODSheetRow[] = [
+  { date: daysAgo(0), recruiterName: 'Priya Sharma', totalCallsMade: 45, lineupsDone: 5, selections: 1, joinings: 0, remarks: 'Good day' },
+  { date: daysAgo(0), recruiterName: 'Rahul Verma', totalCallsMade: 38, lineupsDone: 3, selections: 0, joinings: 1, remarks: 'Follow-ups done' },
+  { date: daysAgo(0), recruiterName: 'Anita Singh', totalCallsMade: 52, lineupsDone: 6, selections: 1, joinings: 0, remarks: 'New JDs received' },
+  { date: daysAgo(0), recruiterName: 'Deepak Yadav', totalCallsMade: 30, lineupsDone: 2, selections: 0, joinings: 0, remarks: 'Half day' },
+  { date: daysAgo(0), recruiterName: 'Meena Kumari', totalCallsMade: 41, lineupsDone: 4, selections: 1, joinings: 0, remarks: 'Client calls' },
+  { date: daysAgo(0), recruiterName: 'Sanjay Tiwari', totalCallsMade: 48, lineupsDone: 5, selections: 0, joinings: 1, remarks: 'Great progress' },
+];
+
+export const DEMO_DAILY_CALLING: DailyCallingRow[] = [
+  { date: daysAgo(0), candidateName: 'Test Candidate 1', contactNumber: '9999999901', location: 'Delhi', client: 'Infosys', jobRole: 'React Dev', source: 'Naukri', callStatus: 'Connected', linedUp: 'Yes', remarks: 'Interested', uniqueId: 'DC001' },
+  { date: daysAgo(0), candidateName: 'Test Candidate 2', contactNumber: '9999999902', location: 'Mumbai', client: 'Wipro', jobRole: 'Java Dev', source: 'LinkedIn', callStatus: 'Not Reachable', linedUp: 'No', remarks: 'Try again', uniqueId: 'DC002' },
+  { date: daysAgo(0), candidateName: 'Test Candidate 3', contactNumber: '9999999903', location: 'Pune', client: 'HCL', jobRole: 'DevOps', source: 'Indeed', callStatus: 'Connected', linedUp: 'Yes', remarks: 'Scheduled', uniqueId: 'DC003' },
+  { date: daysAgo(0), candidateName: 'Test Candidate 4', contactNumber: '9999999904', location: 'Bangalore', client: 'Google', jobRole: 'ML Engineer', source: 'Referral', callStatus: 'Connected', linedUp: 'Yes', remarks: 'Strong profile', uniqueId: 'DC004' },
+  { date: daysAgo(0), candidateName: 'Test Candidate 5', contactNumber: '9999999905', location: 'Chennai', client: 'Amazon', jobRole: 'SDE', source: 'Naukri', callStatus: 'Busy', linedUp: 'No', remarks: 'Callback', uniqueId: 'DC005' },
+  { date: daysAgo(0), candidateName: 'Test Candidate 6', contactNumber: '9999999906', location: 'Hyderabad', client: 'Microsoft', jobRole: 'Azure Dev', source: 'Monster', callStatus: 'Connected', linedUp: 'Yes', remarks: 'Ready to move', uniqueId: 'DC006' },
+  { date: daysAgo(0), candidateName: 'Test Candidate 7', contactNumber: '9999999907', location: 'Noida', client: 'Accenture', jobRole: 'Consultant', source: 'LinkedIn', callStatus: 'Not Interested', linedUp: 'No', remarks: 'High CTC', uniqueId: 'DC007' },
+  { date: daysAgo(0), candidateName: 'Test Candidate 8', contactNumber: '9999999908', location: 'Gurgaon', client: 'Paytm', jobRole: 'PM', source: 'Referral', callStatus: 'Connected', linedUp: 'Yes', remarks: 'Screening done', uniqueId: 'DC008' },
+];
+
+export function getSourceBreakdown(callingData: DailyCallingRow[]): Record<string, number> {
+  const counts: Record<string, number> = {};
+  callingData.forEach(row => {
+    counts[row.source] = (counts[row.source] || 0) + 1;
+  });
+  return counts;
+}
