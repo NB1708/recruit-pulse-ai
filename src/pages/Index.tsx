@@ -28,7 +28,7 @@ const Index = () => {
   const { master, selection, eod, loading: sheetLoading, error: sheetError, connected, connectGoogleSheets } = useRecruitmentData();
 
   const years = useMemo(() => {
-    const set = new Set(master.map(r => r.year).filter(Boolean));
+    const set = new Set(master.map(r => (r.year || '').trim()).filter(Boolean));
     return [...set].sort();
   }, [master]);
 
