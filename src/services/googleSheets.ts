@@ -94,6 +94,7 @@ function parseSelection(values: string[][]): SelectionSheetRow[] {
       joiningConfirmation: rec['joining confirmation'] || '',
       aiOrManualLead: rec['ai or manual lead'] || '',
       clientPocName: rec['client poc name'] || '',
+      clientPayout: Number(rec['client payout']?.replace(/[^0-9.]/g, '')) || 0,
     };
   });
 }
@@ -209,7 +210,7 @@ export async function fetchRecruitmentSheets(
 }> {
   const [masterValues, selectionValues, eodValues] = await Promise.all([
     fetchValues(masterSheetId, 'MASTER TRACKER!A:T', accessToken),
-    fetchValues(selectionEodSheetId, 'SELECTION SHEET!A:Q', accessToken),
+    fetchValues(selectionEodSheetId, 'SELECTION SHEET!A:R', accessToken),
     fetchValues(selectionEodSheetId, 'EOD SHEET!A:G', accessToken),
   ]);
 

@@ -42,6 +42,7 @@ export interface SelectionSheetRow {
   joiningConfirmation: string;
   aiOrManualLead: string;
   clientPocName: string;
+  clientPayout: number;
 }
 
 export interface EODSheetRow {
