@@ -116,14 +116,23 @@ export default function DashboardTab({ masterData, selectionData, eodData, onAiA
       }
     });
 
-    // Second: Lay the EOD metrics on top of it (if the EOD sheet successfully loaded calls)
+    // Second: Lay the EOD metrics on top using fuzzy name matching
     filteredEod.forEach(r => {
       let name = sanitize(r.recruiterName);
       if (!name) return;
       const cleanName = name.charAt(0).toUpperCase() + name.slice(1);
-      if (!recruiterStats[cleanName]) recruiterStats[cleanName] = { calls: 0, lineups: 0, selections: 0, revenue: 0 };
-      recruiterStats[cleanName].calls += (Number(r.totalCallsMade) || 0);
-      recruiterStats[cleanName].lineups += (Number(r.lineupsDone) || 0);
+      const eodLower = cleanName.toLowerCase();
+
+      // Fuzzy match: find existing key where one name contains the other
+      const matchedKey = Object.keys(recruiterStats).find(k => {
+        const kLower = k.toLowerCase();
+        return kLower.includes(eodLower) || eodLower.includes(kLower);
+      });
+
+      const key = matchedKey || cleanName;
+      if (!recruiterStats[key]) recruiterStats[key] = { calls: 0, lineups: 0, selections: 0, revenue: 0 };
+      recruiterStats[key].calls += (Number(r.totalCallsMade) || 0);
+      recruiterStats[key].lineups += (Number(r.lineupsDone) || 0);
     });
 
     // Calculate score and array

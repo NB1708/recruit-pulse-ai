@@ -29,9 +29,9 @@ export default function CandidatesTab({ masterData, onSelectCandidate, monthFilt
     [masterData, monthFilter, yearFilter]
   );
 
-  const recruiters = useMemo(() => ['all', ...Array.from(new Set(globalFiltered.map(r => r.recruiter).filter(Boolean)))], [globalFiltered]);
-  const stages = useMemo(() => ['all', ...Array.from(new Set(globalFiltered.map(r => r.stage).filter(Boolean)))], [globalFiltered]);
-  const statuses = useMemo(() => ['all', ...Array.from(new Set(globalFiltered.map(r => r.clientStatus).filter(Boolean)))], [globalFiltered]);
+  const recruiters = useMemo(() => ['all', ...Array.from(new Set(globalFiltered.map(r => (r.recruiter || '').trim()).filter(v => v.length > 0)))], [globalFiltered]);
+  const stages = useMemo(() => ['all', ...Array.from(new Set(globalFiltered.map(r => (r.stage || '').trim()).filter(v => v.length > 0)))], [globalFiltered]);
+  const statuses = useMemo(() => ['all', ...Array.from(new Set(globalFiltered.map(r => (r.clientStatus || '').trim()).filter(v => v.length > 0)))], [globalFiltered]);
 
   const rows = useMemo(() => globalFiltered.filter(r => r.stage !== 'Joined')
     .filter(r => !search || [r.candidateName, r.role, r.organisation].join(' ').toLowerCase().includes(search.toLowerCase()))
