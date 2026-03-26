@@ -210,7 +210,7 @@ export async function fetchRecruitmentSheets(
 }> {
   const [masterValues, selectionValues, eodValues] = await Promise.all([
     fetchValues(masterSheetId, 'MASTER TRACKER!A:T', accessToken),
-    fetchValues(selectionEodSheetId, 'SELECTION SHEET!A:Q', accessToken),
+    fetchValues(selectionEodSheetId, 'SELECTION SHEET!A:R', accessToken),
     fetchValues(selectionEodSheetId, 'EOD SHEET!A:G', accessToken),
   ]);
 
