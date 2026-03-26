@@ -9,10 +9,10 @@ import WhatsAppTab from '@/components/tabs/WhatsAppTab';
 import DailyBriefingTab from '@/components/tabs/DailyBriefingTab';
 import { useGemini } from '@/hooks/useGemini';
 import { useRecruitmentData } from '@/hooks/useRecruitmentData';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import type { CandidateForWhatsApp, TabId } from '@/types/recruitment';
 
-const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
 const now = new Date();
 const currentMonthName = now.toLocaleString('default', { month: 'long' });
 const currentYear = String(now.getFullYear());
