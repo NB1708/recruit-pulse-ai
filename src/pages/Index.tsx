@@ -7,7 +7,7 @@ import DashboardTab from '@/components/tabs/DashboardTab';
 import CandidatesTab from '@/components/tabs/CandidatesTab';
 import WhatsAppTab from '@/components/tabs/WhatsAppTab';
 import DailyBriefingTab from '@/components/tabs/DailyBriefingTab';
-import { useGemini } from '@/hooks/useGemini';
+import { useAI } from '@/hooks/useAI';
 import { useRecruitmentData } from '@/hooks/useRecruitmentData';
 
 import type { CandidateForWhatsApp, TabId } from '@/types/recruitment';
@@ -25,7 +25,7 @@ const Index = () => {
   const [yearFilter, setYearFilter] = useState(currentYear);
   const [cycleStartDay, setCycleStartDay] = useState(5);
 
-  const { loading: aiLoading, error: aiError, generate, setupKey } = useGemini();
+  const { loading: aiLoading, error: aiError, generate, setupKey } = useAI();
   const { master, selection, eod, loading: sheetLoading, error: sheetError, connected, connectGoogleSheets } = useRecruitmentData();
 
   const years = useMemo(() => {
@@ -34,7 +34,7 @@ const Index = () => {
   }, [master]);
 
   useEffect(() => {
-    const storedKey = sessionStorage.getItem('gemini_api_key');
+    const storedKey = sessionStorage.getItem('openai_api_key');
     const storedMaster = sessionStorage.getItem('gp_master_sheet_id');
     const storedSelectionEod = sessionStorage.getItem('gp_selection_eod_sheet_id');
     if (storedKey && storedMaster && storedSelectionEod) {
@@ -46,7 +46,7 @@ const Index = () => {
   }, [setupKey]);
 
   const handleSetup = (apiKey: string, masterSheetId: string, selectionEodSheetId: string) => {
-    sessionStorage.setItem('gemini_api_key', apiKey);
+    sessionStorage.setItem('openai_api_key', apiKey);
     sessionStorage.setItem('gp_master_sheet_id', masterSheetId);
     sessionStorage.setItem('gp_selection_eod_sheet_id', selectionEodSheetId);
     setupKey(apiKey);
