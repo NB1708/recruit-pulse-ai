@@ -87,6 +87,13 @@ const Index = () => {
 
         {activeTab === 'candidates' && <CandidatesTab masterData={master} onSelectCandidate={onSelectCandidate} monthFilter={monthFilter} yearFilter={yearFilter} />}
 
+        {activeTab === 'clientAnalysis' && (
+          <ClientAnalysisTab
+            spreadsheetId={sessionStorage.getItem('gp_selection_eod_sheet_id') || sessionStorage.getItem('gp_master_sheet_id') || ''}
+            connected={connected}
+          />
+        )}
+
         {activeTab === 'whatsapp' && (
           <WhatsAppTab
             selectedCandidate={selectedCandidate}
