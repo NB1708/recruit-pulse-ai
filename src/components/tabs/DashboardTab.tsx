@@ -2,11 +2,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useMemo, useState } from 'react';
 import { TrendingUp, Users, AlertTriangle, ShieldAlert, Sparkles, IndianRupee, AlertCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { EODSheetRow, MasterTrackerRow, SelectionSheetRow } from '@/types/recruitment';
+
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 interface DashboardTabProps {
   masterData: MasterTrackerRow[];
@@ -18,9 +21,11 @@ interface DashboardTabProps {
   monthFilter: string;
   yearFilter: string;
   cycleStartDay: number;
+  onMonthChange: (v: string) => void;
+  onYearChange: (v: string) => void;
+  onCycleStartDayChange: (v: number) => void;
+  years: string[];
 }
-
-const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 const stageColor: Record<string, string> = {
   'FB Pending': 'bg-rp-orange',
@@ -67,8 +72,7 @@ function isDateInCycle(dateStr: string, range: [Date, Date] | null): boolean {
   return d >= range[0] && d < range[1];
 }
 
-export default function DashboardTab({ masterData, selectionData, eodData, onAiAnalyze, aiLoading, aiError, monthFilter, yearFilter, cycleStartDay: initialCycleDay }: DashboardTabProps) {
-  const [cycleStartDay, setCycleStartDay] = useState(initialCycleDay);
+export default function DashboardTab({ masterData, selectionData, eodData, onAiAnalyze, aiLoading, aiError, monthFilter, yearFilter, cycleStartDay, onMonthChange, onYearChange, onCycleStartDayChange, years }: DashboardTabProps) {
   const [insight, setInsight] = useState('');
 
   const mFilter = sanitize(monthFilter);
@@ -235,18 +239,38 @@ export default function DashboardTab({ masterData, selectionData, eodData, onAiA
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-sm font-display font-bold text-foreground">Dashboard</h2>
         <div className="flex items-center gap-2">
-          <Label className="text-[10px] text-muted-foreground">Cycle Start Day</Label>
-          <Input
-            type="number"
-            min={1}
-            max={28}
-            value={cycleStartDay}
-            onChange={e => setCycleStartDay(Math.max(1, Math.min(28, Number(e.target.value) || 1)))}
-            className="w-16 bg-card border-border text-foreground text-xs h-9 text-center"
-          />
+          <div className="flex items-center gap-1">
+            <Label className="text-[10px] text-muted-foreground whitespace-nowrap">Cycle Day</Label>
+            <Input
+              type="number"
+              min={1}
+              max={28}
+              value={cycleStartDay}
+              onChange={e => onCycleStartDayChange(Math.max(1, Math.min(28, Number(e.target.value) || 1)))}
+              className="w-14 bg-card border-border text-foreground text-xs h-8 text-center"
+            />
+          </div>
+          <Select value={yearFilter} onValueChange={onYearChange}>
+            <SelectTrigger className="w-24 bg-card border-border text-foreground text-xs h-8">
+              <SelectValue placeholder="Year" />
+            </SelectTrigger>
+            <SelectContent className="bg-card border-border">
+              <SelectItem value="all">All Years</SelectItem>
+              {years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={monthFilter} onValueChange={onMonthChange}>
+            <SelectTrigger className="w-28 bg-card border-border text-foreground text-xs h-8">
+              <SelectValue placeholder="Month" />
+            </SelectTrigger>
+            <SelectContent className="bg-card border-border">
+              <SelectItem value="all">All Months</SelectItem>
+              {MONTH_NAMES.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 

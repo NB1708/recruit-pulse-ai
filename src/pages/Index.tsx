@@ -9,10 +9,10 @@ import WhatsAppTab from '@/components/tabs/WhatsAppTab';
 import DailyBriefingTab from '@/components/tabs/DailyBriefingTab';
 import { useGemini } from '@/hooks/useGemini';
 import { useRecruitmentData } from '@/hooks/useRecruitmentData';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import type { CandidateForWhatsApp, TabId } from '@/types/recruitment';
 
-const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
 const now = new Date();
 const currentMonthName = now.toLocaleString('default', { month: 'long' });
 const currentYear = String(now.getFullYear());
@@ -64,31 +64,7 @@ const Index = () => {
       <Header activeTab={activeTab} onTabChange={setActiveTab} />
 
       <main className="mx-auto max-w-[940px] space-y-4 px-4 py-6">
-        <div className="flex flex-wrap items-end gap-2">
-          <div className="flex-1 min-w-0">
-            <GoogleSheetsPanel connected={connected} loading={sheetLoading} error={sheetError} onConnect={connectGoogleSheets} />
-          </div>
-          <div className="flex items-center gap-2">
-            <Select value={yearFilter} onValueChange={setYearFilter}>
-              <SelectTrigger className="w-28 bg-card border-border text-foreground text-xs h-9">
-                <SelectValue placeholder="Year" />
-              </SelectTrigger>
-              <SelectContent className="bg-card border-border">
-                <SelectItem value="all">All Years</SelectItem>
-                {years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={monthFilter} onValueChange={setMonthFilter}>
-              <SelectTrigger className="w-32 bg-card border-border text-foreground text-xs h-9">
-                <SelectValue placeholder="Month" />
-              </SelectTrigger>
-              <SelectContent className="bg-card border-border">
-                <SelectItem value="all">All Months</SelectItem>
-                {MONTH_NAMES.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+        <GoogleSheetsPanel connected={connected} loading={sheetLoading} error={sheetError} onConnect={connectGoogleSheets} />
 
         {activeTab === 'dashboard' && (
           <DashboardTab
@@ -101,6 +77,10 @@ const Index = () => {
             monthFilter={monthFilter}
             yearFilter={yearFilter}
             cycleStartDay={cycleStartDay}
+            onMonthChange={setMonthFilter}
+            onYearChange={setYearFilter}
+            onCycleStartDayChange={setCycleStartDay}
+            years={years}
           />
         )}
 
