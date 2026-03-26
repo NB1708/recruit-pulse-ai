@@ -101,57 +101,53 @@ function parseSelection(values: string[][]): SelectionSheetRow[] {
 
 function parseEod(values: string[][]): EODSheetRow[] {
   if (values.length < 2) return [];
-  const dateRow = values[0];
-  // dates start from column B (index 1)
-  const dates = dateRow.slice(1).map(d => d.trim());
+  const dateRow = values[0]; // Row 1: dates starting from column B
 
-  const results: EODSheetRow[] = [];
-  let currentRecruiter = '';
-  const recruiterMetrics: Record<string, Record<string, number[]>> = {};
+  const recruiterIndices: { name: string; rowIndex: number }[] = [];
 
+  // Scan Column A for recruiter names (non-metric, non-empty rows)
+  const metricKeywords = ['total calls', 'calls', 'lineup', 'lineups', 'selection', 'selections', 'joining', 'joinings', 'remarks', 'remark'];
   for (let i = 1; i < values.length; i++) {
-    const row = values[i];
-    const colA = (row[0] ?? '').trim();
+    const colA = (values[i]?.[0] ?? '').trim();
     if (!colA) continue;
-
-    const colALower = colA.toLowerCase();
-    const isMetric = ['total calls', 'calls', 'lineup', 'lineups', 'selection', 'selections', 'joining', 'joinings'].some(m => colALower.includes(m));
-
-    if (!isMetric) {
-      currentRecruiter = colA;
-      if (!recruiterMetrics[currentRecruiter]) {
-        recruiterMetrics[currentRecruiter] = {};
-      }
-    } else if (currentRecruiter) {
-      const vals = row.slice(1).map(v => Number(v) || 0);
-      let metricKey = 'remarks';
-      if (colALower.includes('call')) metricKey = 'totalCallsMade';
-      else if (colALower.includes('lineup')) metricKey = 'lineupsDone';
-      else if (colALower.includes('selection')) metricKey = 'selections';
-      else if (colALower.includes('joining')) metricKey = 'joinings';
-      recruiterMetrics[currentRecruiter][metricKey] = vals;
-    }
+    const lower = colA.toLowerCase();
+    if (metricKeywords.some(k => lower.includes(k))) continue;
+    recruiterIndices.push({ name: colA, rowIndex: i });
   }
 
-  for (const [recruiter, metrics] of Object.entries(recruiterMetrics)) {
-    for (let d = 0; d < dates.length; d++) {
-      if (!dates[d]) continue;
-      const calls = metrics.totalCallsMade?.[d] ?? 0;
-      const lineups = metrics.lineupsDone?.[d] ?? 0;
-      const sels = metrics.selections?.[d] ?? 0;
-      const joins = metrics.joinings?.[d] ?? 0;
-      if (calls === 0 && lineups === 0 && sels === 0 && joins === 0) continue;
+  const results: EODSheetRow[] = [];
+
+  for (const { name, rowIndex } of recruiterIndices) {
+    // Fixed offsets: Total Calls at +6, Selection at +7, Joinings at +8
+    const callsRow = values[rowIndex + 6];
+    const selectionsRow = values[rowIndex + 7];
+    const joiningsRow = values[rowIndex + 8];
+
+    if (!callsRow && !selectionsRow && !joiningsRow) continue;
+
+    // Sum per date column
+    for (let c = 1; c < dateRow.length; c++) {
+      const dateStr = (dateRow[c] ?? '').trim();
+      if (!dateStr) continue;
+
+      const calls = Number(callsRow?.[c]) || 0;
+      const sels = Number(selectionsRow?.[c]) || 0;
+      const joins = Number(joiningsRow?.[c]) || 0;
+
+      if (calls === 0 && sels === 0 && joins === 0) continue;
+
       results.push({
-        date: dates[d],
-        recruiterName: recruiter,
+        date: dateStr,
+        recruiterName: name,
         totalCallsMade: calls,
-        lineupsDone: lineups,
+        lineupsDone: 0,
         selections: sels,
         joinings: joins,
         remarks: '',
       });
     }
   }
+
   return results;
 }
 
