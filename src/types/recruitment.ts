@@ -24,6 +24,7 @@ export interface MasterTrackerRow {
 export interface SelectionSheetRow {
   srNo: string;
   month: string;
+  year: string;
   dateOfSelection: string;
   candidateName: string;
   contactNumber: string;
@@ -34,6 +35,7 @@ export interface SelectionSheetRow {
   ctcOffered: string;
   joiningDate: string;
   recruiter: string;
+  recruiterName: string;
   candidateStatus: string;
   leadSource: string;
   joiningConfirmation: string;
