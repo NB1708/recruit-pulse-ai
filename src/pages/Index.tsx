@@ -34,7 +34,7 @@ const Index = () => {
   }, [master]);
 
   useEffect(() => {
-    const storedKey = sessionStorage.getItem('openai_api_key');
+    const storedKey = sessionStorage.getItem('groq_api_key');
     const storedMaster = sessionStorage.getItem('gp_master_sheet_id');
     const storedSelectionEod = sessionStorage.getItem('gp_selection_eod_sheet_id');
     if (storedKey && storedMaster && storedSelectionEod) {
@@ -46,7 +46,7 @@ const Index = () => {
   }, [setupKey]);
 
   const handleSetup = (apiKey: string, masterSheetId: string, selectionEodSheetId: string) => {
-    sessionStorage.setItem('openai_api_key', apiKey);
+    sessionStorage.setItem('groq_api_key', apiKey);
     sessionStorage.setItem('gp_master_sheet_id', masterSheetId);
     sessionStorage.setItem('gp_selection_eod_sheet_id', selectionEodSheetId);
     setupKey(apiKey);
