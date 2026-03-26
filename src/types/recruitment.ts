@@ -7,6 +7,7 @@ export interface MasterTrackerRow {
   tl: string;
   am: string;
   recruiter: string;
+  recruiterName: string;
   organisation: string;
   role: string;
   location: string;

@@ -8,8 +8,24 @@ declare global {
 
 const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets.readonly';
 
+const MONTH_ABBR_MAP: Record<string, string> = {
+  jan: 'January', feb: 'February', mar: 'March', apr: 'April',
+  may: 'May', jun: 'June', jul: 'July', aug: 'August',
+  sep: 'September', oct: 'October', nov: 'November', dec: 'December',
+};
+
+function normalizeMonth(raw: string): string {
+  const key = raw.trim().toLowerCase().slice(0, 3);
+  return MONTH_ABBR_MAP[key] || raw.trim();
+}
+
 function normalize(value: string): string {
   return value.trim().toLowerCase();
+}
+
+function emailToName(email: string): string {
+  const local = email.split('@')[0] || email;
+  return local.charAt(0).toUpperCase() + local.slice(1).toLowerCase();
 }
 
 function rowToRecord(headers: string[], row: string[]): Record<string, string> {
@@ -25,15 +41,17 @@ function parseMasterTracker(values: string[][]): MasterTrackerRow[] {
   const [headers, ...rows] = values;
   return rows.filter(r => r.some(Boolean)).map((row) => {
     const rec = rowToRecord(headers, row);
+    const rawRecruiter = rec['recruiter'] || '';
     return {
-      stage: rec['stage'] || '',
+      stage: rec['5 stages'] || rec['stage'] || '',
       clientStatus: rec['client status'] || '',
       year: rec['year'] || '',
-      month: rec['month'] || '',
+      month: normalizeMonth(rec['month'] || ''),
       date: rec['date'] || '',
       tl: rec['tl'] || '',
       am: rec['am'] || '',
-      recruiter: rec['recruiter'] || '',
+      recruiter: rawRecruiter,
+      recruiterName: rawRecruiter.includes('@') ? emailToName(rawRecruiter) : rawRecruiter,
       organisation: rec['organisation'] || '',
       role: rec['role'] || '',
       location: rec['location'] || '',
