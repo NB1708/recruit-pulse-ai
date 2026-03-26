@@ -26,7 +26,7 @@ export function DashboardTab({ masterData, selectionData, eodData, sourceData, o
   const [aiInsight, setAiInsight] = useState<string | null>(null);
   const [monthFilter, setMonthFilter] = useState(currentMonth);
 
-  const months = useMemo(() => [...new Set(masterData.map(r => r.month).filter(Boolean))], [masterData]);
+  const months = useMemo(() => [...new Set(masterData.map(r => r.month).filter(v => v && v.trim()))], [masterData]);
 
   const filteredMaster = useMemo(() =>
     monthFilter === 'all' ? masterData : masterData.filter(r => r.month === monthFilter),
