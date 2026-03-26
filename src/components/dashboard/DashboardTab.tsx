@@ -38,8 +38,11 @@ export function DashboardTab({ masterData, selectionData, eodData, sourceData, o
   );
   const filteredEod = useMemo(() => {
     if (monthFilter === 'all') return eodData;
-    const monthIdx = new Date(`${monthFilter} 1, 2025`).getMonth();
-    return eodData.filter(r => new Date(r.date).getMonth() === monthIdx);
+    return eodData.filter(r => {
+      const parts = r.date.split(/\s+/);
+      const monthName = (parts[1] || '').toLowerCase();
+      return monthName.startsWith(monthFilter.toLowerCase().slice(0, 3));
+    });
   }, [eodData, monthFilter]);
 
   const handleAnalyze = async () => {
