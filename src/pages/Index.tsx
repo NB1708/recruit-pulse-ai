@@ -7,6 +7,7 @@ import DashboardTab from '@/components/tabs/DashboardTab';
 import CandidatesTab from '@/components/tabs/CandidatesTab';
 import WhatsAppTab from '@/components/tabs/WhatsAppTab';
 import DailyBriefingTab from '@/components/tabs/DailyBriefingTab';
+import ClientAnalysisTab from '@/components/tabs/ClientAnalysisTab';
 import { useAI } from '@/hooks/useAI';
 import { useRecruitmentData } from '@/hooks/useRecruitmentData';
 

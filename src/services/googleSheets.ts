@@ -169,6 +169,7 @@ export async function requestGoogleAccessToken(clientId: string): Promise<string
           reject(new Error(response?.error || 'Google OAuth failed'));
           return;
         }
+        sessionStorage.setItem('gp_access_token', response.access_token);
         resolve(response.access_token);
       },
     });
