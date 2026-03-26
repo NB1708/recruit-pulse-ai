@@ -78,20 +78,59 @@ function parseSelection(values: string[][]): SelectionSheetRow[] {
 }
 
 function parseEod(values: string[][]): EODSheetRow[] {
-  if (!values.length) return [];
-  const [headers, ...rows] = values;
-  return rows.filter(r => r.some(Boolean)).map((row) => {
-    const rec = rowToRecord(headers, row);
-    return {
-      date: rec['date'] || '',
-      recruiterName: rec['recruiter name'] || '',
-      totalCallsMade: Number(rec['total calls made'] || 0),
-      lineupsDone: Number(rec['lineups done'] || 0),
-      selections: Number(rec['selections'] || 0),
-      joinings: Number(rec['joinings'] || 0),
-      remarks: rec['remarks'] || '',
-    };
-  });
+  if (values.length < 2) return [];
+  const dateRow = values[0];
+  // dates start from column B (index 1)
+  const dates = dateRow.slice(1).map(d => d.trim());
+
+  const results: EODSheetRow[] = [];
+  let currentRecruiter = '';
+  const recruiterMetrics: Record<string, Record<string, number[]>> = {};
+
+  for (let i = 1; i < values.length; i++) {
+    const row = values[i];
+    const colA = (row[0] ?? '').trim();
+    if (!colA) continue;
+
+    const colALower = colA.toLowerCase();
+    const isMetric = ['total calls', 'calls', 'lineup', 'lineups', 'selection', 'selections', 'joining', 'joinings'].some(m => colALower.includes(m));
+
+    if (!isMetric) {
+      currentRecruiter = colA;
+      if (!recruiterMetrics[currentRecruiter]) {
+        recruiterMetrics[currentRecruiter] = {};
+      }
+    } else if (currentRecruiter) {
+      const vals = row.slice(1).map(v => Number(v) || 0);
+      let metricKey = 'remarks';
+      if (colALower.includes('call')) metricKey = 'totalCallsMade';
+      else if (colALower.includes('lineup')) metricKey = 'lineupsDone';
+      else if (colALower.includes('selection')) metricKey = 'selections';
+      else if (colALower.includes('joining')) metricKey = 'joinings';
+      recruiterMetrics[currentRecruiter][metricKey] = vals;
+    }
+  }
+
+  for (const [recruiter, metrics] of Object.entries(recruiterMetrics)) {
+    for (let d = 0; d < dates.length; d++) {
+      if (!dates[d]) continue;
+      const calls = metrics.totalCallsMade?.[d] ?? 0;
+      const lineups = metrics.lineupsDone?.[d] ?? 0;
+      const sels = metrics.selections?.[d] ?? 0;
+      const joins = metrics.joinings?.[d] ?? 0;
+      if (calls === 0 && lineups === 0 && sels === 0 && joins === 0) continue;
+      results.push({
+        date: dates[d],
+        recruiterName: recruiter,
+        totalCallsMade: calls,
+        lineupsDone: lineups,
+        selections: sels,
+        joinings: joins,
+        remarks: '',
+      });
+    }
+  }
+  return results;
 }
 
 async function loadGoogleIdentityScript(): Promise<void> {
