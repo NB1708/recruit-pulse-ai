@@ -13,7 +13,16 @@ interface CandidatesTabProps {
   yearFilter: string;
 }
 
-const daysSince = (s: string) => Math.floor((Date.now() - new Date(s).getTime()) / 86400000);
+function parseDate(s: string): Date {
+  if (!s) return new Date(NaN);
+  const parts = s.split('/');
+  if (parts.length === 3) {
+    const [day, month, year] = parts.map(Number);
+    return new Date(year, month - 1, day);
+  }
+  return new Date(s);
+}
+const daysSince = (s: string) => { const t = parseDate(s).getTime(); return isNaN(t) ? 0 : Math.floor((Date.now() - t) / 86400000); };
 const daysColor = (d: number) => d >= 7 ? 'text-rp-red' : d >= 5 ? 'text-rp-yellow' : 'text-muted-foreground';
 
 export default function CandidatesTab({ masterData, onSelectCandidate, monthFilter, yearFilter }: CandidatesTabProps) {
@@ -34,11 +43,11 @@ export default function CandidatesTab({ masterData, onSelectCandidate, monthFilt
   const statuses = useMemo(() => ['all', ...Array.from(new Set(globalFiltered.map(r => (r.clientStatus || '').trim()).filter(v => v.length > 0)))], [globalFiltered]);
 
   const rows = useMemo(() => globalFiltered.filter(r => r.stage !== 'Joined')
-    .filter(r => !search || [r.candidateName, r.role, r.organisation].join(' ').toLowerCase().includes(search.toLowerCase()))
-    .filter(r => recruiter === 'all' || r.recruiter === recruiter)
-    .filter(r => stage === 'all' || r.stage === stage)
-    .filter(r => status === 'all' || r.clientStatus === status)
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()), [globalFiltered, search, recruiter, stage, status]);
+    .filter(r => !search || [r.candidateName, r.role, r.organisation].join(' ').toLowerCase().includes(search.trim().toLowerCase()))
+    .filter(r => recruiter === 'all' || (r.recruiter || '').trim().toLowerCase() === recruiter.trim().toLowerCase())
+    .filter(r => stage === 'all' || (r.stage || '').trim().toLowerCase() === stage.trim().toLowerCase())
+    .filter(r => status === 'all' || (r.clientStatus || '').trim().toLowerCase() === status.trim().toLowerCase())
+    .sort((a, b) => parseDate(a.date).getTime() - parseDate(b.date).getTime()), [globalFiltered, search, recruiter, stage, status]);
 
   return <Card className="border-border bg-card animate-fade-in"><CardHeader><CardTitle className="text-sm font-display">Stuck Pipeline</CardTitle>
     <div className="grid gap-2 md:grid-cols-4">
