@@ -123,7 +123,11 @@ export default function DashboardTab({ masterData, selectionData, eodData, onAiA
   }, [eodData]);
 
   const metrics = useMemo(() => {
-    const totalRevenue = filteredSelection.filter(r => sanitize(r.candidateStatus) === 'joined').reduce((sum, r) => sum + (Number(r.clientPayout) || 0), 0);
+    const totalRevenue = selectionData.filter(r => {
+      if (sanitize(r.candidateStatus) !== 'joined') return false;
+      if (!cycleRange) return true;
+      return isDateInCycle(r.joiningDate, cycleRange);
+    }).reduce((sum, r) => sum + (Number(r.clientPayout) || 0), 0);
 
     // Joined this month: scan ALL selection data (not pre-filtered by month string)
     // and count only rows whose actual joiningDate falls within the cycle range
@@ -140,7 +144,7 @@ export default function DashboardTab({ masterData, selectionData, eodData, onAiA
       backoutRisk: filteredSelection.filter(r => ['backout', 'offer backout', 'drop'].includes(sanitize(r.candidateStatus))).length,
       totalRevenue,
     };
-  }, [filteredMaster, filteredSelection, cycleRange]);
+  }, [filteredMaster, filteredSelection, selectionData, cycleRange]);
 
   const funnel = useMemo(() => {
     const stages = ['FB Pending', 'CV Shortlisted', 'Process', 'Offered', 'Joined'];
@@ -178,11 +182,22 @@ export default function DashboardTab({ masterData, selectionData, eodData, onAiA
 
       if (!recruiterStats[cleanName]) recruiterStats[cleanName] = { calls: 0, lineups: 0, selections: 0, revenue: 0, joinings: 0, prevDayLineups: 0, prevDayInterviews: 0 };
       recruiterStats[cleanName].selections += 1;
+    });
 
-      if (sanitize(r.candidateStatus) === 'joined') {
-        recruiterStats[cleanName].revenue += (Number(r.clientPayout) || 0);
-        recruiterStats[cleanName].joinings += 1;
-      }
+    // Joinings & Revenue: use raw selectionData + cycle date range (same logic as joinedThisMonth)
+    selectionData.forEach(r => {
+      if (sanitize(r.candidateStatus) !== 'joined') return;
+      if (cycleRange && !isDateInCycle(r.joiningDate, cycleRange)) return;
+      let name = sanitize(r.recruiterName);
+      if (name.includes('@')) name = name.split('@')[0];
+      if (!name) return;
+      const cleanName = name.charAt(0).toUpperCase() + name.slice(1);
+      const eodLower = cleanName.toLowerCase();
+      const matchedKey = Object.keys(recruiterStats).find(k => k.toLowerCase().includes(eodLower) || eodLower.includes(k.toLowerCase()));
+      const key = matchedKey || cleanName;
+      if (!recruiterStats[key]) recruiterStats[key] = { calls: 0, lineups: 0, selections: 0, revenue: 0, joinings: 0, prevDayLineups: 0, prevDayInterviews: 0 };
+      recruiterStats[key].revenue += (Number(r.clientPayout) || 0);
+      recruiterStats[key].joinings += 1;
     });
 
     filteredEod.forEach(r => {
@@ -219,7 +234,7 @@ export default function DashboardTab({ masterData, selectionData, eodData, onAiA
       const score = (stats.calls * 0.2) + (stats.lineups * 2) + (stats.selections * 4);
       return { recruiterName: name, ...stats, score };
     }).sort((a, b) => b.score - a.score);
-  }, [filteredEod, filteredSelection, yesterdayEod]);
+  }, [filteredEod, filteredSelection, selectionData, cycleRange, yesterdayEod]);
 
   // Lineup discrepancy: EOD lineups vs Master Tracker lineup-stage rows
   const lineupDiscrepancy = useMemo(() => {
