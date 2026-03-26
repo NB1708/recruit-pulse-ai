@@ -23,7 +23,7 @@ export function DailyBriefingTab({ masterData, selectionData, eodData, onGenerat
   const totalSelections = eodData.reduce((s, r) => s + r.selections, 0);
   const totalJoinings = eodData.reduce((s, r) => s + r.joinings, 0);
   const stuck = masterData.filter(r => daysBetween(r.date) >= 5 && r.stage !== 'Joined').length;
-  const backouts = selectionData.filter(r => r.candidateStatus === 'Backout' || r.candidateStatus === 'Dropout').length;
+  const backouts = selectionData.filter(r => ['Backout', 'Offer Backout', 'Drop'].includes(r.candidateStatus)).length;
 
   const handleGenerate = async () => {
     const prompt = `You are RecruitPulse AI, Nikita Berwal's recruitment copilot at Hunar.AI. She manages 6 recruiters. Today's data: ${totalCalls} total calls made, ${totalLineups} lineups done, ${totalSelections} selections, ${totalJoinings} joinings, ${stuck} stuck candidates (5+ days), ${backouts} backouts/dropouts. Recruiter breakdown: ${eodData.map(r => `${r.recruiterName}: ${r.totalCallsMade} calls, ${r.lineupsDone} lineups`).join('; ')}. Generate a crisp morning briefing with: Today's priorities, at-risk candidates needing call, AI tip to improve conversion, quick wins. Under 200 words. Use emojis. Be specific and actionable.`;

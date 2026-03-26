@@ -27,7 +27,7 @@ export default function DailyBriefingTab({ eodData, masterData, selectionData, o
       selections: today.reduce((n, r) => n + r.selections, 0),
       joinings: today.reduce((n, r) => n + r.joinings, 0),
       stuck: masterData.filter(r => r.stage !== 'Joined' && daysSince(r.date) >= 5).length,
-      backouts: selectionData.filter(r => ['Backout', 'Dropout'].includes(r.candidateStatus)).length,
+      backouts: selectionData.filter(r => ['Backout', 'Offer Backout', 'Drop'].includes(r.candidateStatus)).length,
     };
   }, [eodData, masterData, selectionData]);
 

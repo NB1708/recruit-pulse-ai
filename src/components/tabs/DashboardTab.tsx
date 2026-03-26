@@ -17,7 +17,7 @@ interface DashboardTabProps {
 }
 
 const stageColor: Record<string, string> = {
-  'Feedback Pending': 'bg-rp-orange',
+  'FB Pending': 'bg-rp-orange',
   'CV Shortlisted': 'bg-rp-blue',
   'Process': 'bg-rp-purple',
   'Offered': 'bg-rp-green',
@@ -72,7 +72,7 @@ export default function DashboardTab({ masterData, selectionData, eodData, onAiA
 
   const leaderboard = useMemo(() => [...filteredEod].map(r => ({ ...r, score: r.totalCallsMade * 0.2 + r.lineupsDone * 2 + r.selections * 4 })).sort((a, b) => b.score - a.score), [filteredEod]);
 
-  const urgent = useMemo(() => filteredMaster.filter(r => r.stage === 'Feedback Pending' && daysSince(r.date) >= 7).sort((a, b) => daysSince(b.date) - daysSince(a.date)), [filteredMaster]);
+  const urgent = useMemo(() => filteredMaster.filter(r => r.stage === 'FB Pending' && daysSince(r.date) >= 7).sort((a, b) => daysSince(b.date) - daysSince(a.date)), [filteredMaster]);
 
   const runAnalyze = async () => {
     const prompt = `Analyze recruitment funnel ${JSON.stringify(funnel)} and recruiter stats ${JSON.stringify(leaderboard)}. Give concise actionable insights.`;
