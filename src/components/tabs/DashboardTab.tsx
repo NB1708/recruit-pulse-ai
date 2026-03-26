@@ -144,7 +144,7 @@ export default function DashboardTab({ masterData, selectionData, eodData, onAiA
       backoutRisk: filteredSelection.filter(r => ['backout', 'offer backout', 'drop'].includes(sanitize(r.candidateStatus))).length,
       totalRevenue,
     };
-  }, [filteredMaster, filteredSelection, cycleRange]);
+  }, [filteredMaster, filteredSelection, selectionData, cycleRange]);
 
   const funnel = useMemo(() => {
     const stages = ['FB Pending', 'CV Shortlisted', 'Process', 'Offered', 'Joined'];
