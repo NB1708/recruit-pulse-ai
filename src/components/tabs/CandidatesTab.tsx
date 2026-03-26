@@ -43,11 +43,11 @@ export default function CandidatesTab({ masterData, onSelectCandidate, monthFilt
   const statuses = useMemo(() => ['all', ...Array.from(new Set(globalFiltered.map(r => (r.clientStatus || '').trim()).filter(v => v.length > 0)))], [globalFiltered]);
 
   const rows = useMemo(() => globalFiltered.filter(r => r.stage !== 'Joined')
-    .filter(r => !search || [r.candidateName, r.role, r.organisation].join(' ').toLowerCase().includes(search.toLowerCase()))
-    .filter(r => recruiter === 'all' || r.recruiter === recruiter)
-    .filter(r => stage === 'all' || r.stage === stage)
-    .filter(r => status === 'all' || r.clientStatus === status)
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()), [globalFiltered, search, recruiter, stage, status]);
+    .filter(r => !search || [r.candidateName, r.role, r.organisation].join(' ').toLowerCase().includes(search.trim().toLowerCase()))
+    .filter(r => recruiter === 'all' || (r.recruiter || '').trim().toLowerCase() === recruiter.trim().toLowerCase())
+    .filter(r => stage === 'all' || (r.stage || '').trim().toLowerCase() === stage.trim().toLowerCase())
+    .filter(r => status === 'all' || (r.clientStatus || '').trim().toLowerCase() === status.trim().toLowerCase())
+    .sort((a, b) => parseDate(a.date).getTime() - parseDate(b.date).getTime()), [globalFiltered, search, recruiter, stage, status]);
 
   return <Card className="border-border bg-card animate-fade-in"><CardHeader><CardTitle className="text-sm font-display">Stuck Pipeline</CardTitle>
     <div className="grid gap-2 md:grid-cols-4">
