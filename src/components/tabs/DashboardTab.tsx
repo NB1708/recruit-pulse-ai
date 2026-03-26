@@ -55,14 +55,14 @@ export default function DashboardTab({ masterData, selectionData, eodData, onAiA
   }, [eodData, monthFilter, yearFilter]);
 
   const metrics = useMemo(() => ({
-    activePipeline: filteredMaster.filter(r => r.stage === 'Process' || r.stage === 'Feedback Pending').length,
+    activePipeline: filteredMaster.filter(r => r.stage === 'Process' || r.stage === 'FB Pending').length,
     joinedThisMonth: filteredSelection.filter(r => r.candidateStatus === 'Joined').length,
     stuckCandidates: filteredMaster.filter(r => daysSince(r.date) >= 5 && r.stage !== 'Joined').length,
-    backoutRisk: filteredSelection.filter(r => ['Backout', 'Dropout'].includes(r.candidateStatus)).length,
+    backoutRisk: filteredSelection.filter(r => ['Backout', 'Offer Backout', 'Drop'].includes(r.candidateStatus)).length,
   }), [filteredMaster, filteredSelection]);
 
   const funnel = useMemo(() => {
-    const stages = ['Feedback Pending', 'CV Shortlisted', 'Process', 'Offered', 'Joined'];
+    const stages = ['FB Pending', 'CV Shortlisted', 'Process', 'Offered', 'Joined'];
     const counts = stages.map(s => s === 'Offered' ? filteredSelection.filter(r => ['OL released', 'Offer Pending'].includes(r.candidateStatus)).length : filteredMaster.filter(r => r.stage === s).length);
     const max = Math.max(...counts, 1);
     return stages.map((s, i) => ({ stage: s, count: counts[i], width: (counts[i] / max) * 100, drop: i ? Math.round((((counts[i - 1] || 1) - counts[i]) / (counts[i - 1] || 1)) * 100) : 0 }));
