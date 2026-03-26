@@ -2,16 +2,17 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import type { MasterTrackerRow } from '@/types/recruitment';
 
 const STATUS_COLORS: Record<string, string> = {
-  'Feedback Pending': '#FF6B35',
+  'FB Pending': '#FF6B35',
   'CV Shortlisted': '#4D9FFF',
   'Process': '#9B6FFF',
   'Joined': '#00C9A7',
   'Offered': '#00E5A0',
   'Backout': '#FF4757',
-  'Dropout': '#FF6B81',
+  'Offer Backout': '#FF4757',
+  'Drop': '#FF6B81',
   'TL Reject': '#FF9F43',
   'Interview Reject': '#EE5A24',
-  'Telephonic': '#54A0FF',
+  'Tel': '#54A0FF',
   'VC': '#5F27CD',
   'F2F': '#01A3A4',
   'Finals': '#00D2D3',
