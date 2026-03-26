@@ -230,7 +230,7 @@ export default function DashboardTab({ masterData, selectionData, eodData, onAiA
       const score = (stats.calls * 0.2) + (stats.lineups * 2) + (stats.selections * 4);
       return { recruiterName: name, ...stats, score };
     }).sort((a, b) => b.score - a.score);
-  }, [filteredEod, filteredSelection, yesterdayEod]);
+  }, [filteredEod, filteredSelection, selectionData, cycleRange, yesterdayEod]);
 
   // Lineup discrepancy: EOD lineups vs Master Tracker lineup-stage rows
   const lineupDiscrepancy = useMemo(() => {
