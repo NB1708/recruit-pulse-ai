@@ -67,7 +67,11 @@ export default function DashboardTab({ masterData, selectionData, eodData, onAiA
 
   const funnel = useMemo(() => {
     const stages = ['FB Pending', 'CV Shortlisted', 'Process', 'Offered', 'Joined'];
-    const counts = stages.map(s => s === 'Offered' ? filteredSelection.filter(r => ['OL released', 'Offer Pending'].includes(r.candidateStatus)).length : filteredMaster.filter(r => r.stage === s).length);
+    const counts = stages.map(s => {
+      if (s === 'Offered') return filteredSelection.filter(r => ['OL released', 'Offer Pending'].includes(r.candidateStatus)).length;
+      if (s === 'Joined') return filteredSelection.filter(r => r.candidateStatus === 'Joined').length;
+      return filteredMaster.filter(r => r.stage === s).length;
+    });
     const max = Math.max(...counts, 1);
     return stages.map((s, i) => ({ stage: s, count: counts[i], width: (counts[i] / max) * 100, drop: i ? Math.round((((counts[i - 1] || 1) - counts[i]) / (counts[i - 1] || 1)) * 100) : 0 }));
   }, [filteredMaster, filteredSelection]);
