@@ -1,23 +1,23 @@
 import { useState, useCallback } from 'react';
-import { initGemini, isGeminiReady, callGemini } from '@/services/gemini';
+import { initAI, isAIReady, callAI } from '@/services/ai';
 
-export function useGemini() {
+export function useAI() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const setupKey = useCallback((key: string) => {
-    initGemini(key);
+    initAI(key);
   }, []);
 
   const generate = useCallback(async (prompt: string): Promise<string | null> => {
-    if (!isGeminiReady()) {
-      setError('Please configure your Gemini API key first.');
+    if (!isAIReady()) {
+      setError('Please configure your OpenAI API key first.');
       return null;
     }
     setLoading(true);
     setError(null);
     try {
-      const result = await callGemini(prompt);
+      const result = await callAI(prompt);
       return result;
     } catch (e: any) {
       setError(e.message || 'AI generation failed');
@@ -27,5 +27,5 @@ export function useGemini() {
     }
   }, []);
 
-  return { loading, error, generate, setupKey, isReady: isGeminiReady };
+  return { loading, error, generate, setupKey, isReady: isAIReady };
 }
