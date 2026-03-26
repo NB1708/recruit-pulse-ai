@@ -50,15 +50,22 @@ function parseMasterTracker(values: string[][]): MasterTrackerRow[] {
   });
 }
 
+function emailToName(email: string): string {
+  const local = email.split('@')[0] || email;
+  return local.charAt(0).toUpperCase() + local.slice(1).toLowerCase();
+}
+
 function parseSelection(values: string[][]): SelectionSheetRow[] {
   if (!values.length) return [];
   const [headers, ...rows] = values;
   return rows.filter(r => r.some(Boolean)).map((row) => {
     const rec = rowToRecord(headers, row);
+    const rawRecruiter = rec['recruiter'] || '';
     return {
       srNo: rec['sr. no.'] || rec['sr no'] || '',
       month: rec['month'] || '',
-      dateOfSelection: rec['date of selection'] || '',
+      year: rec['year'] || '',
+      dateOfSelection: rec['selection date'] || rec['date of selection'] || '',
       candidateName: rec['candidate name'] || '',
       contactNumber: rec['contact number'] || '',
       emailId: rec['email id'] || '',
@@ -67,7 +74,8 @@ function parseSelection(values: string[][]): SelectionSheetRow[] {
       designation: rec['designation'] || '',
       ctcOffered: rec['ctc offered'] || '',
       joiningDate: rec['joining date'] || '',
-      recruiter: rec['recruiter'] || '',
+      recruiter: rawRecruiter,
+      recruiterName: rawRecruiter.includes('@') ? emailToName(rawRecruiter) : rawRecruiter,
       candidateStatus: rec['candidate status'] || '',
       leadSource: rec['lead source'] || '',
       joiningConfirmation: rec['joining confirmation'] || '',
