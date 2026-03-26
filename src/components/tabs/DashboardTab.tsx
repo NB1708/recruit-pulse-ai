@@ -42,10 +42,14 @@ export default function DashboardTab({ masterData, selectionData, eodData, onAiA
   );
   const filteredEod = useMemo(() => {
     if (monthFilter === 'all' && yearFilter === 'all') return eodData;
+    const months = ['january','february','march','april','may','june','july','august','september','october','november','december'];
     return eodData.filter(r => {
-      const d = new Date(r.date);
-      const mMatch = monthFilter === 'all' || d.toLocaleString('default', { month: 'long' }) === monthFilter;
-      const yMatch = yearFilter === 'all' || String(d.getFullYear()) === yearFilter;
+      const parts = r.date.split(/\s+/);
+      const monthName = (parts[1] || '').toLowerCase();
+      const shortYear = parts[2] || '';
+      const fullYear = shortYear.length === 2 ? '20' + shortYear : shortYear;
+      const mMatch = monthFilter === 'all' || monthName.startsWith(monthFilter.toLowerCase().slice(0, 3));
+      const yMatch = yearFilter === 'all' || fullYear === yearFilter;
       return mMatch && yMatch;
     });
   }, [eodData, monthFilter, yearFilter]);
