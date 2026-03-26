@@ -169,6 +169,7 @@ export async function requestGoogleAccessToken(clientId: string): Promise<string
           reject(new Error(response?.error || 'Google OAuth failed'));
           return;
         }
+        sessionStorage.setItem('gp_access_token', response.access_token);
         resolve(response.access_token);
       },
     });
@@ -176,7 +177,7 @@ export async function requestGoogleAccessToken(clientId: string): Promise<string
   });
 }
 
-async function fetchValues(spreadsheetId: string, range: string, accessToken: string): Promise<string[][]> {
+export async function fetchValues(spreadsheetId: string, range: string, accessToken: string): Promise<string[][]> {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}/values/${encodeURIComponent(range)}`;
   const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
   if (!res.ok) {

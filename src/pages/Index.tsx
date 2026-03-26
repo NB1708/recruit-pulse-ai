@@ -7,6 +7,7 @@ import DashboardTab from '@/components/tabs/DashboardTab';
 import CandidatesTab from '@/components/tabs/CandidatesTab';
 import WhatsAppTab from '@/components/tabs/WhatsAppTab';
 import DailyBriefingTab from '@/components/tabs/DailyBriefingTab';
+import ClientAnalysisTab from '@/components/tabs/ClientAnalysisTab';
 import { useAI } from '@/hooks/useAI';
 import { useRecruitmentData } from '@/hooks/useRecruitmentData';
 
@@ -85,6 +86,13 @@ const Index = () => {
         )}
 
         {activeTab === 'candidates' && <CandidatesTab masterData={master} onSelectCandidate={onSelectCandidate} monthFilter={monthFilter} yearFilter={yearFilter} />}
+
+        {activeTab === 'clientAnalysis' && (
+          <ClientAnalysisTab
+            spreadsheetId={sessionStorage.getItem('gp_selection_eod_sheet_id') || sessionStorage.getItem('gp_master_sheet_id') || ''}
+            connected={connected}
+          />
+        )}
 
         {activeTab === 'whatsapp' && (
           <WhatsAppTab

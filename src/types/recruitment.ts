@@ -55,7 +55,13 @@ export interface EODSheetRow {
   remarks: string;
 }
 
-export type TabId = 'dashboard' | 'candidates' | 'whatsapp' | 'briefing';
+export type TabId = 'dashboard' | 'candidates' | 'whatsapp' | 'briefing' | 'clientAnalysis';
+
+export interface ClientSheetRow {
+  candidateName: string;
+  status: string;
+  [key: string]: string;
+}
 
 export interface CandidateForWhatsApp {
   candidateName: string;
