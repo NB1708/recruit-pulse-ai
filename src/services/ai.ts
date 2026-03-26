@@ -1,9 +1,9 @@
-import OpenAI from 'openai';
+import Groq from 'groq-sdk';
 
-let client: OpenAI | null = null;
+let client: Groq | null = null;
 
 export function initAI(apiKey: string) {
-  client = new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
+  client = new Groq({ apiKey, dangerouslyAllowBrowser: true });
 }
 
 export function isAIReady(): boolean {
@@ -11,9 +11,9 @@ export function isAIReady(): boolean {
 }
 
 export async function callAI(prompt: string): Promise<string> {
-  if (!client) throw new Error('OpenAI API key not configured');
+  if (!client) throw new Error('Groq API key not configured');
   const response = await client.chat.completions.create({
-    model: 'gpt-4o-mini',
+    model: 'llama3-8b-8192',
     messages: [{ role: 'user', content: prompt }],
     max_tokens: 1024,
   });

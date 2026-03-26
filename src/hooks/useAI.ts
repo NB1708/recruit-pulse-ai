@@ -11,7 +11,7 @@ export function useAI() {
 
   const generate = useCallback(async (prompt: string): Promise<string | null> => {
     if (!isAIReady()) {
-      setError('Please configure your OpenAI API key first.');
+      setError('Please configure your Groq API key first.');
       return null;
     }
     setLoading(true);
