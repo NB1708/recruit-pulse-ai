@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { ApiKeyModal } from '@/components/ApiKeyModal';
@@ -9,15 +9,28 @@ import WhatsAppTab from '@/components/tabs/WhatsAppTab';
 import DailyBriefingTab from '@/components/tabs/DailyBriefingTab';
 import { useGemini } from '@/hooks/useGemini';
 import { useRecruitmentData } from '@/hooks/useRecruitmentData';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { CandidateForWhatsApp, TabId } from '@/types/recruitment';
+
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const now = new Date();
+const currentMonthName = now.toLocaleString('default', { month: 'long' });
+const currentYear = String(now.getFullYear());
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState<TabId>('dashboard');
   const [selectedCandidate, setSelectedCandidate] = useState<CandidateForWhatsApp | null>(null);
   const [apiModalOpen, setApiModalOpen] = useState(false);
+  const [monthFilter, setMonthFilter] = useState(currentMonthName);
+  const [yearFilter, setYearFilter] = useState(currentYear);
 
   const { loading: aiLoading, error: aiError, generate, setupKey } = useGemini();
   const { master, selection, eod, loading: sheetLoading, error: sheetError, connected, connectGoogleSheets } = useRecruitmentData();
+
+  const years = useMemo(() => {
+    const set = new Set(master.map(r => r.year).filter(Boolean));
+    return [...set].sort();
+  }, [master]);
 
   useEffect(() => {
     const storedKey = sessionStorage.getItem('gemini_api_key');
@@ -50,7 +63,31 @@ const Index = () => {
       <Header activeTab={activeTab} onTabChange={setActiveTab} />
 
       <main className="mx-auto max-w-[940px] space-y-4 px-4 py-6">
-        <GoogleSheetsPanel connected={connected} loading={sheetLoading} error={sheetError} onConnect={connectGoogleSheets} />
+        <div className="flex flex-wrap items-end gap-2">
+          <div className="flex-1 min-w-0">
+            <GoogleSheetsPanel connected={connected} loading={sheetLoading} error={sheetError} onConnect={connectGoogleSheets} />
+          </div>
+          <div className="flex items-center gap-2">
+            <Select value={yearFilter} onValueChange={setYearFilter}>
+              <SelectTrigger className="w-28 bg-card border-border text-foreground text-xs h-9">
+                <SelectValue placeholder="Year" />
+              </SelectTrigger>
+              <SelectContent className="bg-card border-border">
+                <SelectItem value="all">All Years</SelectItem>
+                {years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={monthFilter} onValueChange={setMonthFilter}>
+              <SelectTrigger className="w-32 bg-card border-border text-foreground text-xs h-9">
+                <SelectValue placeholder="Month" />
+              </SelectTrigger>
+              <SelectContent className="bg-card border-border">
+                <SelectItem value="all">All Months</SelectItem>
+                {MONTH_NAMES.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
 
         {activeTab === 'dashboard' && (
           <DashboardTab
@@ -60,10 +97,12 @@ const Index = () => {
             onAiAnalyze={generate}
             aiLoading={aiLoading}
             aiError={aiError}
+            monthFilter={monthFilter}
+            yearFilter={yearFilter}
           />
         )}
 
-        {activeTab === 'candidates' && <CandidatesTab masterData={master} onSelectCandidate={onSelectCandidate} />}
+        {activeTab === 'candidates' && <CandidatesTab masterData={master} onSelectCandidate={onSelectCandidate} monthFilter={monthFilter} yearFilter={yearFilter} />}
 
         {activeTab === 'whatsapp' && (
           <WhatsAppTab
