@@ -13,7 +13,16 @@ interface CandidatesTabProps {
   yearFilter: string;
 }
 
-const daysSince = (s: string) => Math.floor((Date.now() - new Date(s).getTime()) / 86400000);
+function parseDate(s: string): Date {
+  if (!s) return new Date(NaN);
+  const parts = s.split('/');
+  if (parts.length === 3) {
+    const [day, month, year] = parts.map(Number);
+    return new Date(year, month - 1, day);
+  }
+  return new Date(s);
+}
+const daysSince = (s: string) => { const t = parseDate(s).getTime(); return isNaN(t) ? 0 : Math.floor((Date.now() - t) / 86400000); };
 const daysColor = (d: number) => d >= 7 ? 'text-rp-red' : d >= 5 ? 'text-rp-yellow' : 'text-muted-foreground';
 
 export default function CandidatesTab({ masterData, onSelectCandidate, monthFilter, yearFilter }: CandidatesTabProps) {
