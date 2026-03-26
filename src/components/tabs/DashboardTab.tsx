@@ -125,13 +125,12 @@ export default function DashboardTab({ masterData, selectionData, eodData, onAiA
   const metrics = useMemo(() => {
     const totalRevenue = filteredSelection.filter(r => sanitize(r.candidateStatus) === 'joined').reduce((sum, r) => sum + (Number(r.clientPayout) || 0), 0);
 
-    // Joined this month: check actual joiningDate falls in cycle range
-    const joinedThisMonth = filteredSelection.filter(r => {
+    // Joined this month: scan ALL selection data (not pre-filtered by month string)
+    // and count only rows whose actual joiningDate falls within the cycle range
+    const joinedThisMonth = selectionData.filter(r => {
       if (sanitize(r.candidateStatus) !== 'joined') return false;
-      if (cycleRange) {
-        return isDateInCycle(r.joiningDate, cycleRange);
-      }
-      return true; // "all" filter
+      if (!cycleRange) return true; // "all" filter
+      return isDateInCycle(r.joiningDate, cycleRange);
     }).length;
 
     return {
