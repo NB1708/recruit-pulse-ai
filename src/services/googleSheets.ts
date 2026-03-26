@@ -111,7 +111,7 @@ function parseEod(values: string[][]): EODSheetRow[] {
     // Detect if this row is a Recruiter Name by checking if the NEXT row is "CV to TL"
     const nextColToLower = (values[i + 1]?.[0] ?? '').trim().toLowerCase();
 
-    if (nextColToLower === 'cv to tl' || nextColToLower.includes('cv to')) {
+    if (nextColToLower === 'cv to tl') {
       const recruiterName = colA;
 
       const lineupsRow = values[i + 3]; // Row 3 down is "CV to Client" (Lineups)

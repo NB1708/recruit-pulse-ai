@@ -31,10 +31,10 @@ export function CandidatesTab({ masterData, onSelectCandidate }: CandidatesTabPr
   const [monthFilter, setMonthFilter] = useState(currentMonth);
   const [search, setSearch] = useState('');
 
-  const months = useMemo(() => [...new Set(masterData.map(r => r.month).filter(Boolean))], [masterData]);
-  const recruiters = useMemo(() => [...new Set(masterData.map(r => r.recruiter))], [masterData]);
-  const stages = useMemo(() => [...new Set(masterData.map(r => r.stage))], [masterData]);
-  const statuses = useMemo(() => [...new Set(masterData.map(r => r.clientStatus))], [masterData]);
+  const months = useMemo(() => [...new Set(masterData.map(r => (r.month || '').trim()).filter(v => v.length > 0))], [masterData]);
+  const recruiters = useMemo(() => [...new Set(masterData.map(r => (r.recruiter || '').trim()).filter(v => v.length > 0))], [masterData]);
+  const stages = useMemo(() => [...new Set(masterData.map(r => (r.stage || '').trim()).filter(v => v.length > 0))], [masterData]);
+  const statuses = useMemo(() => [...new Set(masterData.map(r => (r.clientStatus || '').trim()).filter(v => v.length > 0))], [masterData]);
 
   const filtered = useMemo(() => {
     return masterData
