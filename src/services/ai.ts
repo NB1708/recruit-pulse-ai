@@ -13,7 +13,7 @@ export function isAIReady(): boolean {
 export async function callAI(prompt: string): Promise<string> {
   if (!client) throw new Error('Groq API key not configured');
   const response = await client.chat.completions.create({
-    model: 'llama3-8b-8192',
+    model: 'llama-3.1-8b-instant',
     messages: [{ role: 'user', content: prompt }],
     max_tokens: 1024,
   });
