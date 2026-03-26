@@ -65,7 +65,7 @@ function parseMasterTracker(values: string[][]): MasterTrackerRow[] {
       currentCompany: rec['current company'] || '',
       status: rec['status'] || '',
     };
-  });
+  }).filter(r => r.year !== '1899' && r.candidateName.trim() !== '');
 }
 
 function parseSelection(values: string[][]): SelectionSheetRow[] {
@@ -96,7 +96,7 @@ function parseSelection(values: string[][]): SelectionSheetRow[] {
       clientPocName: rec['client poc name'] || '',
       clientPayout: Number(rec['client payout']?.replace(/[^0-9.]/g, '')) || 0,
     };
-  });
+  }).filter(r => r.year !== '1899' && r.candidateName.trim() !== '' && r.candidateStatus.trim() !== '');
 }
 
 function parseEod(values: string[][]): EODSheetRow[] {
