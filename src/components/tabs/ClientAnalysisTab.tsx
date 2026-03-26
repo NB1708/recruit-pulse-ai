@@ -1,130 +1,70 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AiSpinner } from '@/components/AiSpinner';
-import { fetchValues } from '@/services/googleSheets';
-
-const DEFAULT_CLIENTS = [
-  'IIFL North',
-  'Rupeek',
-  'Aavas',
-  'Muthoot',
-  'Equitas',
-  'India Gold',
-  'Manappuram',
-  'IIFL South',
-];
+import type { MasterTrackerRow, SelectionSheetRow } from '@/types/recruitment';
 
 function sanitize(v: string) {
   return (v || '').trim().toLowerCase();
 }
 
-interface ClientMetrics {
-  cvShared: number;
-  selections: number;
-  joined: number;
-  successRate: number;
-}
-
-function computeMetrics(rows: string[][], headers: string[]): ClientMetrics {
-  const hMap: Record<string, number> = {};
-  headers.forEach((h, i) => { hMap[h.trim().toLowerCase()] = i; });
-
-  const statusIdx = hMap['status'] ?? hMap['candidate status'] ?? hMap['5 stages'] ?? hMap['stage'] ?? -1;
-
-  let cvShared = 0;
-  let selections = 0;
-  let joined = 0;
-
-  rows.forEach(row => {
-    cvShared++;
-    if (statusIdx >= 0) {
-      const s = sanitize(row[statusIdx] || '');
-      if (s.includes('select') || s === 'selected') selections++;
-      if (s === 'joined') joined++;
-    }
-  });
-
-  return {
-    cvShared,
-    selections,
-    joined,
-    successRate: cvShared > 0 ? Math.round((joined / cvShared) * 100 * 10) / 10 : 0,
-  };
-}
-
 interface Props {
-  spreadsheetId: string;
-  connected: boolean;
+  masterData: MasterTrackerRow[];
+  selectionData: SelectionSheetRow[];
 }
 
-export default function ClientAnalysisTab({ spreadsheetId, connected }: Props) {
+export default function ClientAnalysisTab({ masterData, selectionData }: Props) {
   const [selectedClient, setSelectedClient] = useState<string>('');
-  const [metrics, setMetrics] = useState<ClientMetrics | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const accessToken = useMemo(() => sessionStorage.getItem('gp_access_token') || '', []);
+  const clientOptions = useMemo(() => {
+    const set = new Set<string>();
+    masterData.forEach(r => {
+      const org = r.organisation.trim();
+      if (org) set.add(org);
+    });
+    selectionData.forEach(r => {
+      const comp = r.company.trim();
+      if (comp) set.add(comp);
+    });
+    return [...set].sort();
+  }, [masterData, selectionData]);
 
-  const handleClientChange = useCallback(async (client: string) => {
-    setSelectedClient(client);
-    setMetrics(null);
-    setError(null);
+  const metrics = useMemo(() => {
+    if (!selectedClient) return null;
+    const key = sanitize(selectedClient);
 
-    const token = sessionStorage.getItem('gp_access_token') || '';
-    if (!token || !spreadsheetId) {
-      setError('Please connect Google Sheets first.');
-      return;
-    }
+    const cvShared = masterData.filter(r => sanitize(r.organisation) === key).length;
 
-    setLoading(true);
-    try {
-      const values = await fetchValues(spreadsheetId, client, token);
-      if (!values.length || values.length < 2) {
-        setMetrics({ cvShared: 0, selections: 0, joined: 0, successRate: 0 });
-        return;
-      }
-      const [headers, ...rows] = values;
-      const filteredRows = rows.filter(r => r.some(Boolean));
-      setMetrics(computeMetrics(filteredRows, headers));
-    } catch (e: any) {
-      setError(e.message || 'Failed to fetch client data');
-    } finally {
-      setLoading(false);
-    }
-  }, [spreadsheetId]);
+    let selections = 0;
+    let joined = 0;
+    selectionData.forEach(r => {
+      if (sanitize(r.company) !== key) return;
+      const status = sanitize(r.candidateStatus);
+      if (status.includes('select') || status === 'selected') selections++;
+      if (status === 'joined') joined++;
+    });
+
+    const successRate = cvShared > 0 ? Math.round((joined / cvShared) * 1000) / 10 : 0;
+
+    return { cvShared, selections, joined, successRate };
+  }, [selectedClient, masterData, selectionData]);
 
   return (
     <div className="space-y-4 animate-fade-in">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-display font-bold text-foreground">Client Analysis</h2>
-        <Select value={selectedClient} onValueChange={handleClientChange}>
+        <Select value={selectedClient} onValueChange={setSelectedClient}>
           <SelectTrigger className="w-52 bg-card border-border text-foreground">
             <SelectValue placeholder="Select Client" />
           </SelectTrigger>
           <SelectContent className="bg-card border-border">
-            {DEFAULT_CLIENTS.map(c => (
+            {clientOptions.map(c => (
               <SelectItem key={c} value={c}>{c}</SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
-      {!connected && (
-        <p className="text-sm text-muted-foreground">Connect Google Sheets to fetch live client data.</p>
-      )}
-
-      {loading && (
-        <div className="flex items-center gap-2 py-8 justify-center">
-          <AiSpinner /> <span className="text-sm text-muted-foreground">Fetching client data…</span>
-        </div>
-      )}
-
-      {error && (
-        <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-3 text-sm text-destructive">{error}</div>
-      )}
-
-      {metrics && !loading && (
+      {metrics && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <MetricCard title="CV Shared" value={metrics.cvShared} emoji="📄" />
           <MetricCard title="Selections" value={metrics.selections} emoji="✅" />
@@ -133,7 +73,7 @@ export default function ClientAnalysisTab({ spreadsheetId, connected }: Props) {
         </div>
       )}
 
-      {!selectedClient && !loading && (
+      {!selectedClient && (
         <div className="text-center py-16 text-muted-foreground">
           <p className="text-3xl mb-2">🏢</p>
           <p className="text-sm">Select a client from the dropdown to view their recruitment metrics.</p>

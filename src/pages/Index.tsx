@@ -89,8 +89,8 @@ const Index = () => {
 
         {activeTab === 'clientAnalysis' && (
           <ClientAnalysisTab
-            spreadsheetId={sessionStorage.getItem('gp_selection_eod_sheet_id') || sessionStorage.getItem('gp_master_sheet_id') || ''}
-            connected={connected}
+            masterData={master}
+            selectionData={selection}
           />
         )}
 
