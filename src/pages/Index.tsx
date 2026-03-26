@@ -10,8 +10,6 @@ import DailyBriefingTab from '@/components/tabs/DailyBriefingTab';
 import { useGemini } from '@/hooks/useGemini';
 import { useRecruitmentData } from '@/hooks/useRecruitmentData';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import type { CandidateForWhatsApp, TabId } from '@/types/recruitment';
 
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -71,17 +69,6 @@ const Index = () => {
             <GoogleSheetsPanel connected={connected} loading={sheetLoading} error={sheetError} onConnect={connectGoogleSheets} />
           </div>
           <div className="flex items-center gap-2">
-            <div className="flex flex-col gap-1">
-              <Label className="text-[10px] text-muted-foreground">Cycle Start</Label>
-              <Input
-                type="number"
-                min={1}
-                max={28}
-                value={cycleStartDay}
-                onChange={e => setCycleStartDay(Math.max(1, Math.min(28, Number(e.target.value) || 1)))}
-                className="w-16 bg-card border-border text-foreground text-xs h-9 text-center"
-              />
-            </div>
             <Select value={yearFilter} onValueChange={setYearFilter}>
               <SelectTrigger className="w-28 bg-card border-border text-foreground text-xs h-9">
                 <SelectValue placeholder="Year" />
