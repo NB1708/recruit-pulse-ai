@@ -4,6 +4,7 @@ import type { TabId } from '@/types/recruitment';
 const tabs: { id: TabId; label: string; icon: string }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: '📊' },
   { id: 'candidates', label: 'Candidates', icon: '👥' },
+  { id: 'clientAnalysis', label: 'Client Analysis', icon: '🏢' },
   { id: 'whatsapp', label: 'WhatsApp AI', icon: '💬' },
   { id: 'briefing', label: 'Daily Briefing', icon: '📋' },
 ];

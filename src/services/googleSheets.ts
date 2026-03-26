@@ -176,7 +176,7 @@ export async function requestGoogleAccessToken(clientId: string): Promise<string
   });
 }
 
-async function fetchValues(spreadsheetId: string, range: string, accessToken: string): Promise<string[][]> {
+export async function fetchValues(spreadsheetId: string, range: string, accessToken: string): Promise<string[][]> {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}/values/${encodeURIComponent(range)}`;
   const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
   if (!res.ok) {
