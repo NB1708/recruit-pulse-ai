@@ -37,8 +37,9 @@ export default function DashboardTab({ masterData, selectionData, eodData, onAiA
   );
   const filteredSelection = useMemo(() =>
     selectionData
-      .filter(r => monthFilter === 'all' || r.month === monthFilter),
-    [selectionData, monthFilter]
+      .filter(r => monthFilter === 'all' || r.month === monthFilter)
+      .filter(r => yearFilter === 'all' || r.year === yearFilter),
+    [selectionData, monthFilter, yearFilter]
   );
   const filteredEod = useMemo(() => {
     if (monthFilter === 'all' && yearFilter === 'all') return eodData;
