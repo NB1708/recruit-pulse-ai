@@ -68,11 +68,6 @@ function parseMasterTracker(values: string[][]): MasterTrackerRow[] {
   });
 }
 
-function emailToName(email: string): string {
-  const local = email.split('@')[0] || email;
-  return local.charAt(0).toUpperCase() + local.slice(1).toLowerCase();
-}
-
 function parseSelection(values: string[][]): SelectionSheetRow[] {
   if (!values.length) return [];
   const [headers, ...rows] = values;
