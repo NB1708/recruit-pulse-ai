@@ -4,6 +4,8 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useMemo, useState } from 'react';
 import { TrendingUp, Users, AlertTriangle, ShieldAlert, Sparkles, IndianRupee, AlertCircle } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import type { EODSheetRow, MasterTrackerRow, SelectionSheetRow } from '@/types/recruitment';
 
 interface DashboardTabProps {
@@ -65,7 +67,8 @@ function isDateInCycle(dateStr: string, range: [Date, Date] | null): boolean {
   return d >= range[0] && d < range[1];
 }
 
-export default function DashboardTab({ masterData, selectionData, eodData, onAiAnalyze, aiLoading, aiError, monthFilter, yearFilter, cycleStartDay }: DashboardTabProps) {
+export default function DashboardTab({ masterData, selectionData, eodData, onAiAnalyze, aiLoading, aiError, monthFilter, yearFilter, cycleStartDay: initialCycleDay }: DashboardTabProps) {
+  const [cycleStartDay, setCycleStartDay] = useState(initialCycleDay);
   const [insight, setInsight] = useState('');
 
   const mFilter = sanitize(monthFilter);
@@ -232,7 +235,20 @@ export default function DashboardTab({ masterData, selectionData, eodData, onAiA
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <h2 className="text-sm font-display font-bold text-foreground">Dashboard</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-display font-bold text-foreground">Dashboard</h2>
+        <div className="flex items-center gap-2">
+          <Label className="text-[10px] text-muted-foreground">Cycle Start Day</Label>
+          <Input
+            type="number"
+            min={1}
+            max={28}
+            value={cycleStartDay}
+            onChange={e => setCycleStartDay(Math.max(1, Math.min(28, Number(e.target.value) || 1)))}
+            className="w-16 bg-card border-border text-foreground text-xs h-9 text-center"
+          />
+        </div>
+      </div>
 
       {lineupDiscrepancy && (
         <Alert variant="destructive" className="border-destructive/50 bg-destructive/10">
