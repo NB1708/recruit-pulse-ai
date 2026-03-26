@@ -23,25 +23,25 @@ export function ApiKeyModal({ open, onSubmit }: ApiKeyModalProps) {
             Connect RecruitPulse AI
           </DialogTitle>
           <DialogDescription className="text-muted-foreground">
-            Enter your Gemini API key and Spreadsheet IDs to get started. Keys stay in session memory only.
+            Enter your OpenAI API key and Spreadsheet IDs to get started. Keys stay in session memory only.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 pt-2">
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground">Gemini API Key</label>
+            <label className="text-xs font-medium text-muted-foreground">OpenAI API Key</label>
             <Input
-              placeholder="AIza..."
+              placeholder="sk-..."
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               className="bg-background border-border text-foreground placeholder:text-muted-foreground"
             />
             <a
-              href="https://aistudio.google.com/app/apikey"
+              href="https://platform.openai.com/api-keys"
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs text-primary hover:underline block"
             >
-              Get your free API key from Google AI Studio →
+              Get your API key from OpenAI Platform →
             </a>
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -72,7 +72,7 @@ export function ApiKeyModal({ open, onSubmit }: ApiKeyModalProps) {
           </div>
           <Button
             className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-display"
-            disabled={!apiKey.startsWith('AIza') || !masterSheetId.trim() || !selectionEodSheetId.trim()}
+            disabled={!apiKey.startsWith('sk-') || !masterSheetId.trim() || !selectionEodSheetId.trim()}
             onClick={() => onSubmit(apiKey, masterSheetId.trim(), selectionEodSheetId.trim())}
           >
             Connect & Launch
