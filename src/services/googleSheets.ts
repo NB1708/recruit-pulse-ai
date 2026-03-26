@@ -65,7 +65,7 @@ function parseMasterTracker(values: string[][]): MasterTrackerRow[] {
       currentCompany: rec['current company'] || '',
       status: rec['status'] || '',
     };
-  }).filter(r => r.year !== '1899' && r.candidateName.trim() !== '');
+  }).filter(r => r.year !== '1899' && r.month !== 'December' && r.candidateName.trim() !== '');
 }
 
 function parseSelection(values: string[][]): SelectionSheetRow[] {
@@ -76,7 +76,7 @@ function parseSelection(values: string[][]): SelectionSheetRow[] {
     const rawRecruiter = rec['recruiter'] || '';
     return {
       srNo: rec['sr. no.'] || rec['sr no'] || '',
-      month: rec['month'] || '',
+      month: normalizeMonth(rec['month'] || ''),
       year: rec['year'] || '',
       dateOfSelection: rec['selection date'] || rec['date of selection'] || '',
       candidateName: rec['candidate name'] || '',
@@ -96,7 +96,7 @@ function parseSelection(values: string[][]): SelectionSheetRow[] {
       clientPocName: rec['client poc name'] || '',
       clientPayout: Number(rec['client payout']?.replace(/[^0-9.]/g, '')) || 0,
     };
-  }).filter(r => r.year !== '1899' && r.candidateName.trim() !== '' && r.candidateStatus.trim() !== '');
+  }).filter(r => r.year !== '1899' && r.month !== 'December' && r.candidateName.trim() !== '' && r.candidateStatus.trim() !== '');
 }
 
 function parseEod(values: string[][]): EODSheetRow[] {
