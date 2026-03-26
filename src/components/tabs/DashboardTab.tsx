@@ -53,23 +53,28 @@ const daysSince = (s: string) => {
 
 const sanitize = (val: any) => (val || '').toString().trim().toLowerCase();
 
-/** Get cycle date range: [startDate, endDate) for given month/year/cycleDay */
+/** Get cycle date range: [cycleStartDate, cycleEndDate] inclusive for given month/year/cycleDay.
+ * E.g. month=March, year=2026, cycleDay=5 → March 5, 2026 to April 4, 2026 (inclusive). */
 function getCycleDateRange(monthName: string, yearStr: string, cycleDay: number): [Date, Date] | null {
   const mIdx = MONTH_NAMES.findIndex(m => m.toLowerCase() === monthName.toLowerCase());
   if (mIdx === -1) return null;
   const year = Number(yearStr);
   if (isNaN(year)) return null;
-  const start = new Date(year, mIdx, cycleDay);
-  const end = new Date(year, mIdx + 1, cycleDay);
+  // Cycle starts on cycleDay of selected month
+  const start = new Date(year, mIdx, cycleDay, 0, 0, 0, 0);
+  // Cycle ends the day before cycleDay of next month (inclusive)
+  const endExclusive = new Date(year, mIdx + 1, cycleDay);
+  const end = new Date(endExclusive.getTime() - 86400000); // subtract 1 day
+  end.setHours(23, 59, 59, 999);
   return [start, end];
 }
 
-/** Check if a date string falls within the cycle range */
+/** Check if a joining date string (DD/MM/YYYY) falls within the cycle range [start, end] inclusive */
 function isDateInCycle(dateStr: string, range: [Date, Date] | null): boolean {
-  if (!range) return true; // no range = show all
+  if (!range) return true;
   const d = parseDate(dateStr);
   if (isNaN(d.getTime())) return false;
-  return d >= range[0] && d < range[1];
+  return d.getTime() >= range[0].getTime() && d.getTime() <= range[1].getTime();
 }
 
 export default function DashboardTab({ masterData, selectionData, eodData, onAiAnalyze, aiLoading, aiError, monthFilter, yearFilter, cycleStartDay, onMonthChange, onYearChange, onCycleStartDayChange, years }: DashboardTabProps) {
