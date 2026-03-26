@@ -1,8 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useMemo, useState } from 'react';
-import { TrendingUp, Users, AlertTriangle, ShieldAlert, Sparkles, IndianRupee } from 'lucide-react';
+import { TrendingUp, Users, AlertTriangle, ShieldAlert, Sparkles, IndianRupee, AlertCircle } from 'lucide-react';
 import type { EODSheetRow, MasterTrackerRow, SelectionSheetRow } from '@/types/recruitment';
 
 interface DashboardTabProps {
@@ -14,7 +15,10 @@ interface DashboardTabProps {
   aiError: string | null;
   monthFilter: string;
   yearFilter: string;
+  cycleStartDay: number;
 }
+
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 const stageColor: Record<string, string> = {
   'FB Pending': 'bg-rp-orange',
@@ -24,21 +28,54 @@ const stageColor: Record<string, string> = {
   'Joined': 'bg-rp-teal',
 };
 
+/** Parse DD/MM/YYYY or fallback */
+function parseDate(s: string): Date {
+  if (!s) return new Date(NaN);
+  const parts = s.split('/');
+  if (parts.length === 3) {
+    const [day, month, year] = parts.map(Number);
+    return new Date(year, month - 1, day);
+  }
+  return new Date(s);
+}
+
 const daysSince = (s: string) => {
-  if (!s) return 0;
-  return Math.floor((Date.now() - new Date(s).getTime()) / 86400000);
+  const t = parseDate(s).getTime();
+  return isNaN(t) ? 0 : Math.floor((Date.now() - t) / 86400000);
 };
 
-// Aggressive sanitizer to ignore spaces and capital letters
 const sanitize = (val: any) => (val || '').toString().trim().toLowerCase();
 
-export default function DashboardTab({ masterData, selectionData, eodData, onAiAnalyze, aiLoading, aiError, monthFilter, yearFilter }: DashboardTabProps) {
+/** Get cycle date range: [startDate, endDate) for given month/year/cycleDay */
+function getCycleDateRange(monthName: string, yearStr: string, cycleDay: number): [Date, Date] | null {
+  const mIdx = MONTH_NAMES.findIndex(m => m.toLowerCase() === monthName.toLowerCase());
+  if (mIdx === -1) return null;
+  const year = Number(yearStr);
+  if (isNaN(year)) return null;
+  const start = new Date(year, mIdx, cycleDay);
+  const end = new Date(year, mIdx + 1, cycleDay);
+  return [start, end];
+}
+
+/** Check if a date string falls within the cycle range */
+function isDateInCycle(dateStr: string, range: [Date, Date] | null): boolean {
+  if (!range) return true; // no range = show all
+  const d = parseDate(dateStr);
+  if (isNaN(d.getTime())) return false;
+  return d >= range[0] && d < range[1];
+}
+
+export default function DashboardTab({ masterData, selectionData, eodData, onAiAnalyze, aiLoading, aiError, monthFilter, yearFilter, cycleStartDay }: DashboardTabProps) {
   const [insight, setInsight] = useState('');
 
   const mFilter = sanitize(monthFilter);
   const yFilter = sanitize(yearFilter);
 
-  // Filter Master Tracker aggressively resolving spaces
+  const cycleRange = useMemo(() => {
+    if (mFilter === 'all' || yFilter === 'all') return null;
+    return getCycleDateRange(monthFilter, yearFilter, cycleStartDay);
+  }, [monthFilter, yearFilter, cycleStartDay, mFilter, yFilter]);
+
   const filteredMaster = useMemo(() =>
     masterData
       .filter(r => mFilter === 'all' || sanitize(r.month) === mFilter)
@@ -46,14 +83,12 @@ export default function DashboardTab({ masterData, selectionData, eodData, onAiA
     [masterData, mFilter, yFilter]
   );
 
-  // Filter Selection Sheet aggressively
   const filteredSelection = useMemo(() =>
     selectionData
       .filter(r => mFilter === 'all' || sanitize(r.month) === mFilter),
     [selectionData, mFilter]
   );
 
-  // Safe EOD filtering (loose match)
   const filteredEod = useMemo(() => {
     if (mFilter === 'all' && yFilter === 'all') return eodData || [];
     return (eodData || []).filter(r => {
@@ -62,16 +97,39 @@ export default function DashboardTab({ masterData, selectionData, eodData, onAiA
     });
   }, [eodData, mFilter, yFilter]);
 
+  // Get yesterday's EOD data
+  const yesterdayEod = useMemo(() => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yDay = yesterday.getDate();
+    const yMonth = yesterday.toLocaleString('default', { month: 'short' }).toLowerCase();
+    return (eodData || []).filter(r => {
+      if (!r.date) return false;
+      const d = sanitize(r.date);
+      return d.includes(String(yDay)) && d.includes(yMonth);
+    });
+  }, [eodData]);
+
   const metrics = useMemo(() => {
     const totalRevenue = filteredSelection.filter(r => sanitize(r.candidateStatus) === 'joined').reduce((sum, r) => sum + (Number(r.clientPayout) || 0), 0);
+
+    // Joined this month: check actual joiningDate falls in cycle range
+    const joinedThisMonth = filteredSelection.filter(r => {
+      if (sanitize(r.candidateStatus) !== 'joined') return false;
+      if (cycleRange) {
+        return isDateInCycle(r.joiningDate, cycleRange);
+      }
+      return true; // "all" filter
+    }).length;
+
     return {
       activePipeline: filteredMaster.filter(r => sanitize(r.stage) === 'process' || sanitize(r.stage) === 'fb pending').length,
-      joinedThisMonth: filteredSelection.filter(r => sanitize(r.candidateStatus) === 'joined').length,
+      joinedThisMonth,
       stuckCandidates: filteredMaster.filter(r => r.date && daysSince(r.date) >= 5 && sanitize(r.stage) !== 'joined').length,
       backoutRisk: filteredSelection.filter(r => ['backout', 'offer backout', 'drop'].includes(sanitize(r.candidateStatus))).length,
       totalRevenue,
     };
-  }, [filteredMaster, filteredSelection]);
+  }, [filteredMaster, filteredSelection, cycleRange]);
 
   const funnel = useMemo(() => {
     const stages = ['FB Pending', 'CV Shortlisted', 'Process', 'Offered', 'Joined'];
@@ -97,57 +155,72 @@ export default function DashboardTab({ masterData, selectionData, eodData, onAiA
     }, {} as Record<string, number>)).sort((a, b) => b[1] - a[1]);
   }, [filteredMaster]);
 
-  // Robust Leaderboard computing directly from Selection Sheet + EOD
+  // Leaderboard with joinings, prev day lineup & interview
   const leaderboard = useMemo(() => {
-    const recruiterStats: Record<string, { calls: number; lineups: number; selections: number; revenue: number }> = {};
+    const recruiterStats: Record<string, { calls: number; lineups: number; selections: number; revenue: number; joinings: number; prevDayLineups: number; prevDayInterviews: number }> = {};
 
-    // First: Base it off actual selections and joinings from the robust Selection Sheet
     filteredSelection.forEach(r => {
       let name = sanitize(r.recruiterName);
       if (name.includes('@')) name = name.split('@')[0];
       if (!name) return;
       const cleanName = name.charAt(0).toUpperCase() + name.slice(1);
 
-      if (!recruiterStats[cleanName]) recruiterStats[cleanName] = { calls: 0, lineups: 0, selections: 0, revenue: 0 };
+      if (!recruiterStats[cleanName]) recruiterStats[cleanName] = { calls: 0, lineups: 0, selections: 0, revenue: 0, joinings: 0, prevDayLineups: 0, prevDayInterviews: 0 };
       recruiterStats[cleanName].selections += 1;
 
       if (sanitize(r.candidateStatus) === 'joined') {
         recruiterStats[cleanName].revenue += (Number(r.clientPayout) || 0);
+        recruiterStats[cleanName].joinings += 1;
       }
     });
 
-    // Second: Lay the EOD metrics on top using fuzzy name matching
     filteredEod.forEach(r => {
       let name = sanitize(r.recruiterName);
       if (!name) return;
       const cleanName = name.charAt(0).toUpperCase() + name.slice(1);
       const eodLower = cleanName.toLowerCase();
 
-      // Fuzzy match: find existing key where one name contains the other
       const matchedKey = Object.keys(recruiterStats).find(k => {
         const kLower = k.toLowerCase();
         return kLower.includes(eodLower) || eodLower.includes(kLower);
       });
 
       const key = matchedKey || cleanName;
-      if (!recruiterStats[key]) recruiterStats[key] = { calls: 0, lineups: 0, selections: 0, revenue: 0 };
+      if (!recruiterStats[key]) recruiterStats[key] = { calls: 0, lineups: 0, selections: 0, revenue: 0, joinings: 0, prevDayLineups: 0, prevDayInterviews: 0 };
       recruiterStats[key].calls += (Number(r.totalCallsMade) || 0);
       recruiterStats[key].lineups += (Number(r.lineupsDone) || 0);
     });
 
-    // Calculate score and array
+    // Previous day stats
+    yesterdayEod.forEach(r => {
+      let name = sanitize(r.recruiterName);
+      if (!name) return;
+      const cleanName = name.charAt(0).toUpperCase() + name.slice(1);
+      const eodLower = cleanName.toLowerCase();
+      const matchedKey = Object.keys(recruiterStats).find(k => k.toLowerCase().includes(eodLower) || eodLower.includes(k.toLowerCase()));
+      const key = matchedKey || cleanName;
+      if (!recruiterStats[key]) recruiterStats[key] = { calls: 0, lineups: 0, selections: 0, revenue: 0, joinings: 0, prevDayLineups: 0, prevDayInterviews: 0 };
+      recruiterStats[key].prevDayLineups += (Number(r.lineupsDone) || 0);
+      recruiterStats[key].prevDayInterviews += (Number(r.selections) || 0);
+    });
+
     return Object.entries(recruiterStats).map(([name, stats]) => {
       const score = (stats.calls * 0.2) + (stats.lineups * 2) + (stats.selections * 4);
-      return {
-        recruiterName: name,
-        totalCallsMade: stats.calls,
-        lineupsDone: stats.lineups,
-        selections: stats.selections,
-        revenue: stats.revenue,
-        score
-      };
+      return { recruiterName: name, ...stats, score };
     }).sort((a, b) => b.score - a.score);
-  }, [filteredEod, filteredSelection]);
+  }, [filteredEod, filteredSelection, yesterdayEod]);
+
+  // Lineup discrepancy: EOD lineups vs Master Tracker lineup-stage rows
+  const lineupDiscrepancy = useMemo(() => {
+    const eodLineups = filteredEod.reduce((sum, r) => sum + (Number(r.lineupsDone) || 0), 0);
+    const masterLineups = filteredMaster.filter(r => {
+      const s = sanitize(r.stage);
+      return s === 'cv shortlisted' || s === 'process';
+    }).length;
+    if (eodLineups === 0 && masterLineups === 0) return null;
+    if (eodLineups !== masterLineups) return { eod: eodLineups, master: masterLineups };
+    return null;
+  }, [filteredEod, filteredMaster]);
 
   const urgent = useMemo(() => filteredMaster.filter(r => sanitize(r.stage) === 'fb pending' && r.date && daysSince(r.date) >= 7).sort((a, b) => daysSince(b.date) - daysSince(a.date)), [filteredMaster]);
 
@@ -161,9 +234,19 @@ export default function DashboardTab({ masterData, selectionData, eodData, onAiA
     <div className="space-y-6 animate-fade-in">
       <h2 className="text-sm font-display font-bold text-foreground">Dashboard</h2>
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+      {lineupDiscrepancy && (
+        <Alert variant="destructive" className="border-destructive/50 bg-destructive/10">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle className="text-sm font-semibold">⚠️ Lineup Data Mismatch Detected!</AlertTitle>
+          <AlertDescription className="text-xs">
+            EOD Sheet lineups: <strong>{lineupDiscrepancy.eod}</strong> vs Master Tracker pipeline (CV Shortlisted + Process): <strong>{lineupDiscrepancy.master}</strong>. These numbers should match. Please verify recruiter entries.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
         {([
-          ['Total Active Pipeline', metrics.activePipeline, <Users className="h-4 w-4 text-primary" />],
+          ['Active Pipeline', metrics.activePipeline, <Users className="h-4 w-4 text-primary" />],
           ['Joined This Month', metrics.joinedThisMonth, <TrendingUp className="h-4 w-4 text-rp-green" />],
           ['Stuck Candidates', metrics.stuckCandidates, <AlertTriangle className="h-4 w-4 text-rp-yellow" />],
           ['Backout Risk', metrics.backoutRisk, <ShieldAlert className="h-4 w-4 text-rp-orange" />],
@@ -229,34 +312,42 @@ export default function DashboardTab({ masterData, selectionData, eodData, onAiA
           <CardTitle className="text-sm font-display">Recruiter Leaderboard</CardTitle>
         </CardHeader>
         <CardContent>
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="border-b border-border text-muted-foreground">
-                <th className="py-2 text-left">Recruiter</th>
-                <th className="py-2 text-left">Calls</th>
-                <th className="py-2 text-left">Lineups</th>
-                <th className="py-2 text-left">Selections</th>
-                <th className="py-2 text-left">Revenue</th>
-                <th className="py-2 text-left">Score</th>
-              </tr>
-            </thead>
-            <tbody>
-              {leaderboard.length === 0 ? (
-                <tr><td colSpan={6} className="py-4 text-center text-muted-foreground">No selections found this month.</td></tr>
-              ) : (
-                leaderboard.map(r => (
-                  <tr key={r.recruiterName} className="border-b border-border/40">
-                    <td className="py-2">{r.recruiterName}</td>
-                    <td>{r.totalCallsMade}</td>
-                    <td>{r.lineupsDone}</td>
-                    <td>{r.selections}</td>
-                    <td className="text-rp-teal">₹{r.revenue.toLocaleString('en-IN')}</td>
-                    <td className="text-primary">{r.score.toFixed(1)}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-border text-muted-foreground">
+                  <th className="py-2 text-left">Recruiter</th>
+                  <th className="py-2 text-left">Calls</th>
+                  <th className="py-2 text-left">Lineups</th>
+                  <th className="py-2 text-left">Selections</th>
+                  <th className="py-2 text-left">Joinings</th>
+                  <th className="py-2 text-left">Revenue</th>
+                  <th className="py-2 text-left">Prev Lineups</th>
+                  <th className="py-2 text-left">Prev Interviews</th>
+                  <th className="py-2 text-left">Score</th>
+                </tr>
+              </thead>
+              <tbody>
+                {leaderboard.length === 0 ? (
+                  <tr><td colSpan={9} className="py-4 text-center text-muted-foreground">No data found this month.</td></tr>
+                ) : (
+                  leaderboard.map(r => (
+                    <tr key={r.recruiterName} className="border-b border-border/40">
+                      <td className="py-2">{r.recruiterName}</td>
+                      <td>{r.calls}</td>
+                      <td>{r.lineups}</td>
+                      <td>{r.selections}</td>
+                      <td className="text-rp-green">{r.joinings}</td>
+                      <td className="text-rp-teal">₹{r.revenue.toLocaleString('en-IN')}</td>
+                      <td>{r.prevDayLineups}</td>
+                      <td>{r.prevDayInterviews}</td>
+                      <td className="text-primary">{r.score.toFixed(1)}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </CardContent>
       </Card>
 
