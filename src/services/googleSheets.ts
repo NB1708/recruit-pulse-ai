@@ -65,7 +65,7 @@ function parseMasterTracker(values: string[][]): MasterTrackerRow[] {
       currentCompany: rec['current company'] || '',
       status: rec['status'] || '',
     };
-  }).filter(r => r.year !== '1899' && r.month !== 'December' && r.candidateName.trim() !== '');
+  });
 }
 
 function parseSelection(values: string[][]): SelectionSheetRow[] {
@@ -76,7 +76,7 @@ function parseSelection(values: string[][]): SelectionSheetRow[] {
     const rawRecruiter = rec['recruiter'] || '';
     return {
       srNo: rec['sr. no.'] || rec['sr no'] || '',
-      month: normalizeMonth(rec['month'] || ''),
+      month: rec['month'] || '',
       year: rec['year'] || '',
       dateOfSelection: rec['selection date'] || rec['date of selection'] || '',
       candidateName: rec['candidate name'] || '',
@@ -96,55 +96,49 @@ function parseSelection(values: string[][]): SelectionSheetRow[] {
       clientPocName: rec['client poc name'] || '',
       clientPayout: Number(rec['client payout']?.replace(/[^0-9.]/g, '')) || 0,
     };
-  }).filter(r => r.year !== '1899' && r.month !== 'December' && r.candidateName.trim() !== '' && r.candidateStatus.trim() !== '');
+  });
 }
 
 function parseEod(values: string[][]): EODSheetRow[] {
   if (values.length < 2) return [];
-  const dateRow = values[0]; // Row 1: dates starting from column B
+  const dateRow = values[0];
+  const results: EODSheetRow[] = [];
 
-  const recruiterIndices: { name: string; rowIndex: number }[] = [];
-
-  // Scan Column A for recruiter names (non-metric, non-empty rows)
-  const metricKeywords = ['total calls', 'calls', 'lineup', 'lineups', 'selection', 'selections', 'joining', 'joinings', 'remarks', 'remark'];
   for (let i = 1; i < values.length; i++) {
     const colA = (values[i]?.[0] ?? '').trim();
     if (!colA) continue;
-    const lower = colA.toLowerCase();
-    if (metricKeywords.some(k => lower.includes(k))) continue;
-    recruiterIndices.push({ name: colA, rowIndex: i });
-  }
 
-  const results: EODSheetRow[] = [];
+    // Detect if this row is a Recruiter Name by checking if the NEXT row is "CV to TL"
+    const nextColToLower = (values[i + 1]?.[0] ?? '').trim().toLowerCase();
 
-  for (const { name, rowIndex } of recruiterIndices) {
-    // Fixed offsets: Total Calls at +6, Selection at +7, Joinings at +8
-    const callsRow = values[rowIndex + 6];
-    const selectionsRow = values[rowIndex + 7];
-    const joiningsRow = values[rowIndex + 8];
+    if (nextColToLower === 'cv to tl' || nextColToLower.includes('cv to')) {
+      const recruiterName = colA;
 
-    if (!callsRow && !selectionsRow && !joiningsRow) continue;
+      const lineupsRow = values[i + 3]; // Row 3 down is "CV to Client" (Lineups)
+      const callsRow = values[i + 6];   // Row 6 down is "Total Calls"
 
-    // Sum per date column
-    for (let c = 1; c < dateRow.length; c++) {
-      const dateStr = (dateRow[c] ?? '').trim();
-      if (!dateStr) continue;
+      if (!callsRow) continue;
 
-      const calls = Number(callsRow?.[c]) || 0;
-      const sels = Number(selectionsRow?.[c]) || 0;
-      const joins = Number(joiningsRow?.[c]) || 0;
+      // Loop across the dates horizontally without clipping
+      for (let c = 1; c < dateRow.length; c++) {
+        const dateStr = (dateRow[c] ?? '').trim();
+        if (!dateStr) continue;
 
-      if (calls === 0 && sels === 0 && joins === 0) continue;
+        const calls = Number(callsRow[c]) || 0;
+        const lineups = Number(lineupsRow?.[c]) || 0;
 
-      results.push({
-        date: dateStr,
-        recruiterName: name,
-        totalCallsMade: calls,
-        lineupsDone: 0,
-        selections: sels,
-        joinings: joins,
-        remarks: '',
-      });
+        if (calls === 0 && lineups === 0) continue;
+
+        results.push({
+          date: dateStr,
+          recruiterName: recruiterName,
+          totalCallsMade: calls,
+          lineupsDone: lineups,
+          selections: 0,
+          joinings: 0,
+          remarks: '',
+        });
+      }
     }
   }
 
@@ -166,7 +160,6 @@ async function loadGoogleIdentityScript(): Promise<void> {
 
 export async function requestGoogleAccessToken(clientId: string): Promise<string> {
   await loadGoogleIdentityScript();
-
   return await new Promise<string>((resolve, reject) => {
     const tokenClient = window.google.accounts.oauth2.initTokenClient({
       client_id: clientId,
@@ -179,7 +172,6 @@ export async function requestGoogleAccessToken(clientId: string): Promise<string
         resolve(response.access_token);
       },
     });
-
     tokenClient.requestAccessToken({ prompt: 'consent' });
   });
 }
@@ -205,9 +197,10 @@ export async function fetchRecruitmentSheets(
   eod: EODSheetRow[];
 }> {
   const [masterValues, selectionValues, eodValues] = await Promise.all([
-    fetchValues(masterSheetId, 'MASTER TRACKER!A:T', accessToken),
-    fetchValues(selectionEodSheetId, 'SELECTION SHEET!A:R', accessToken),
-    fetchValues(selectionEodSheetId, 'EOD SHEET!A:G', accessToken),
+    // Removed column caps (!A:G) so it fetches all dates and columns!
+    fetchValues(masterSheetId, 'MASTER TRACKER', accessToken),
+    fetchValues(selectionEodSheetId, 'SELECTION SHEET', accessToken),
+    fetchValues(selectionEodSheetId, 'EOD SHEET', accessToken),
   ]);
 
   return {
