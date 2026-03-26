@@ -1,7 +1,8 @@
-import type { MasterTrackerRow } from '@/types/recruitment';
+import type { MasterTrackerRow, SelectionSheetRow } from '@/types/recruitment';
 
 interface HiringFunnelProps {
   masterData: MasterTrackerRow[];
+  selectionData: SelectionSheetRow[];
 }
 
 const STAGES = ['FB Pending', 'CV Shortlisted', 'Process', 'Offered', 'Joined'] as const;
@@ -13,14 +14,21 @@ const STAGE_COLORS: Record<string, string> = {
   'Joined': 'bg-rp-teal',
 };
 
-export function HiringFunnel({ masterData }: HiringFunnelProps) {
+export function HiringFunnel({ masterData, selectionData }: HiringFunnelProps) {
   const counts: Record<string, number> = {};
   STAGES.forEach(s => { counts[s] = 0; });
-  
+
+  // Top of funnel from Master Tracker
   masterData.forEach(r => {
-    // Count by clientStatus for Offered, by stage for others
-    if (r.clientStatus === 'Offered') counts['Offered']++;
-    else if (STAGES.includes(r.stage as any)) counts[r.stage]++;
+    if (r.stage === 'FB Pending' || r.stage === 'CV Shortlisted' || r.stage === 'Process') {
+      counts[r.stage]++;
+    }
+  });
+
+  // Bottom of funnel from Selection Sheet
+  selectionData.forEach(r => {
+    if (r.candidateStatus === 'Offer Pending' || r.candidateStatus === 'OL released') counts['Offered']++;
+    else if (r.candidateStatus === 'Joined') counts['Joined']++;
   });
 
   const maxCount = Math.max(...Object.values(counts), 1);

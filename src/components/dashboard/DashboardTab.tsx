@@ -80,7 +80,7 @@ Be specific, use numbers, suggest exactly what to do. Use emojis. Keep under 150
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-4">
-          <HiringFunnel masterData={filteredMaster} />
+          <HiringFunnel masterData={filteredMaster} selectionData={filteredSelection} />
           <div className="flex items-center gap-3">
             <Button onClick={handleAnalyze} disabled={aiLoading} className="bg-primary text-primary-foreground hover:bg-primary/90 font-display">
               <Bot className="h-4 w-4 mr-2" />
