@@ -4,9 +4,9 @@ interface HiringFunnelProps {
   masterData: MasterTrackerRow[];
 }
 
-const STAGES = ['Feedback Pending', 'CV Shortlisted', 'Process', 'Offered', 'Joined'] as const;
+const STAGES = ['FB Pending', 'CV Shortlisted', 'Process', 'Offered', 'Joined'] as const;
 const STAGE_COLORS: Record<string, string> = {
-  'Feedback Pending': 'bg-rp-orange',
+  'FB Pending': 'bg-rp-orange',
   'CV Shortlisted': 'bg-rp-blue',
   'Process': 'bg-rp-purple',
   'Offered': 'bg-rp-green',

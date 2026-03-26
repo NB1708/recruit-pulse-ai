@@ -11,7 +11,7 @@ function daysBetween(dateStr: string): number {
 
 export function UrgentCandidates({ masterData }: UrgentCandidatesProps) {
   const urgent = masterData
-    .filter(r => r.stage === 'Feedback Pending' && daysBetween(r.date) >= 7)
+    .filter(r => r.stage === 'FB Pending' && daysBetween(r.date) >= 7)
     .sort((a, b) => daysBetween(b.date) - daysBetween(a.date));
 
   return (

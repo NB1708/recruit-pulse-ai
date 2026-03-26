@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import type { MasterTrackerRow, CandidateForWhatsApp } from '@/types/recruitment';
 
 const STAGE_BADGE_COLORS: Record<string, string> = {
-  'Feedback Pending': 'bg-rp-orange/20 text-rp-orange border-rp-orange/30',
+  'FB Pending': 'bg-rp-orange/20 text-rp-orange border-rp-orange/30',
   'CV Shortlisted': 'bg-rp-blue/20 text-rp-blue border-rp-blue/30',
   'Process': 'bg-rp-purple/20 text-rp-purple border-rp-purple/30',
   'Offered': 'bg-rp-green/20 text-rp-green border-rp-green/30',

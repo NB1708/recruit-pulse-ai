@@ -17,7 +17,7 @@ interface DashboardTabProps {
 }
 
 const stageColor: Record<string, string> = {
-  'Feedback Pending': 'bg-rp-orange',
+  'FB Pending': 'bg-rp-orange',
   'CV Shortlisted': 'bg-rp-blue',
   'Process': 'bg-rp-purple',
   'Offered': 'bg-rp-green',
@@ -55,14 +55,14 @@ export default function DashboardTab({ masterData, selectionData, eodData, onAiA
   }, [eodData, monthFilter, yearFilter]);
 
   const metrics = useMemo(() => ({
-    activePipeline: filteredMaster.filter(r => r.stage === 'Process' || r.stage === 'Feedback Pending').length,
+    activePipeline: filteredMaster.filter(r => r.stage === 'Process' || r.stage === 'FB Pending').length,
     joinedThisMonth: filteredSelection.filter(r => r.candidateStatus === 'Joined').length,
     stuckCandidates: filteredMaster.filter(r => daysSince(r.date) >= 5 && r.stage !== 'Joined').length,
-    backoutRisk: filteredSelection.filter(r => ['Backout', 'Dropout'].includes(r.candidateStatus)).length,
+    backoutRisk: filteredSelection.filter(r => ['Backout', 'Offer Backout', 'Drop'].includes(r.candidateStatus)).length,
   }), [filteredMaster, filteredSelection]);
 
   const funnel = useMemo(() => {
-    const stages = ['Feedback Pending', 'CV Shortlisted', 'Process', 'Offered', 'Joined'];
+    const stages = ['FB Pending', 'CV Shortlisted', 'Process', 'Offered', 'Joined'];
     const counts = stages.map(s => s === 'Offered' ? filteredSelection.filter(r => ['OL released', 'Offer Pending'].includes(r.candidateStatus)).length : filteredMaster.filter(r => r.stage === s).length);
     const max = Math.max(...counts, 1);
     return stages.map((s, i) => ({ stage: s, count: counts[i], width: (counts[i] / max) * 100, drop: i ? Math.round((((counts[i - 1] || 1) - counts[i]) / (counts[i - 1] || 1)) * 100) : 0 }));
@@ -72,7 +72,7 @@ export default function DashboardTab({ masterData, selectionData, eodData, onAiA
 
   const leaderboard = useMemo(() => [...filteredEod].map(r => ({ ...r, score: r.totalCallsMade * 0.2 + r.lineupsDone * 2 + r.selections * 4 })).sort((a, b) => b.score - a.score), [filteredEod]);
 
-  const urgent = useMemo(() => filteredMaster.filter(r => r.stage === 'Feedback Pending' && daysSince(r.date) >= 7).sort((a, b) => daysSince(b.date) - daysSince(a.date)), [filteredMaster]);
+  const urgent = useMemo(() => filteredMaster.filter(r => r.stage === 'FB Pending' && daysSince(r.date) >= 7).sort((a, b) => daysSince(b.date) - daysSince(a.date)), [filteredMaster]);
 
   const runAnalyze = async () => {
     const prompt = `Analyze recruitment funnel ${JSON.stringify(funnel)} and recruiter stats ${JSON.stringify(leaderboard)}. Give concise actionable insights.`;

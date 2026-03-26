@@ -12,11 +12,11 @@ function daysBetween(dateStr: string): number {
 }
 
 export function StatCards({ masterData, selectionData }: StatCardsProps) {
-  const activePipeline = masterData.filter(r => r.stage === 'Process' || r.stage === 'Feedback Pending').length;
+  const activePipeline = masterData.filter(r => r.stage === 'Process' || r.stage === 'FB Pending').length;
   const currentMonth = new Date().toLocaleString('default', { month: 'long' });
   const joinedThisMonth = selectionData.filter(r => r.candidateStatus === 'Joined' && r.month === currentMonth).length;
   const stuck = masterData.filter(r => daysBetween(r.date) >= 5 && r.stage !== 'Joined').length;
-  const backoutRisk = selectionData.filter(r => r.candidateStatus === 'Backout' || r.candidateStatus === 'Dropout').length;
+  const backoutRisk = selectionData.filter(r => ['Backout', 'Offer Backout', 'Drop'].includes(r.candidateStatus)).length;
 
   const cards = [
     { label: 'Active Pipeline', value: activePipeline, color: 'text-rp-green', icon: '🔥' },
