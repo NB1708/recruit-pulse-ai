@@ -45,6 +45,18 @@ export const SetupGuide = ({ onContinue }: SetupGuideProps) => (
         </p>
       </div>
 
+      {/* Sheet ID info card */}
+      <div className="rounded-xl border border-blue-500/30 bg-blue-500/10 p-5 space-y-2">
+        <div className="flex items-center gap-2">
+          <Info className="h-5 w-5 text-blue-400" />
+          <h3 className="text-sm font-bold text-blue-300">Your data can be in 1 or 2 Google Sheets</h3>
+        </div>
+        <ul className="text-xs text-blue-200/80 space-y-1 list-disc list-inside">
+          <li><span className="font-semibold text-blue-200">Option A — All 3 tabs in ONE sheet:</span> Use the same Sheet ID for both fields on the next screen</li>
+          <li><span className="font-semibold text-blue-200">Option B — EOD Sheet is separate:</span> Use different Sheet IDs for each field</li>
+        </ul>
+      </div>
+
       <p className="text-center text-sm font-semibold text-white/80">
         Your Google Sheet must have exactly 3 tabs with these exact names:
       </p>
@@ -125,7 +137,14 @@ export const SetupGuide = ({ onContinue }: SetupGuideProps) => (
         </button>
         <p className="text-xs text-muted-foreground">
           Need help?{' '}
-          <span className="underline cursor-pointer text-white/60">Download sample sheet template</span>
+          <a
+            href="https://docs.google.com/spreadsheets/d/1ggnTOcKqBPlkM5gb6NGBnLDzthtZYOURZkqq-Hs5Cy0/edit"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline text-[#00E5A0] hover:text-[#00E5A0]/80"
+          >
+            View Sample Sheet Template ↗
+          </a>
         </p>
       </div>
     </div>
