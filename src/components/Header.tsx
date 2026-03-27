@@ -1,4 +1,4 @@
-import { Zap, Settings } from 'lucide-react';
+import { Zap, Settings, RefreshCw } from 'lucide-react';
 import type { TabId } from '@/types/recruitment';
 
 const tabs: { id: TabId; label: string; icon: string }[] = [
@@ -15,9 +15,11 @@ interface HeaderProps {
   sheetsConnected: boolean;
   onSettingsOpen: () => void;
   onReconnect: () => void;
+  onRefresh?: () => void;
+  refreshing?: boolean;
 }
 
-export function Header({ activeTab, onTabChange, sheetsConnected, onSettingsOpen, onReconnect }: HeaderProps) {
+export function Header({ activeTab, onTabChange, sheetsConnected, onSettingsOpen, onReconnect, onRefresh, refreshing }: HeaderProps) {
   return (
     <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50">
       <div className="max-w-[940px] mx-auto px-4 py-3">
@@ -29,10 +31,6 @@ export function Header({ activeTab, onTabChange, sheetsConnected, onSettingsOpen
             </h1>
           </div>
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5">
-              <div className="h-2 w-2 rounded-full bg-rp-green animate-pulse-green" />
-              <span className="text-xs text-rp-green font-medium">Live Pipeline</span>
-            </div>
             {sheetsConnected ? (
               <span className="text-xs font-medium text-rp-green flex items-center gap-1">✅ Sheets Connected</span>
             ) : (
@@ -40,6 +38,16 @@ export function Header({ activeTab, onTabChange, sheetsConnected, onSettingsOpen
                 ❌ Sheets Disconnected
                 <button onClick={onReconnect} className="underline ml-1 text-primary hover:text-primary/80">Reconnect</button>
               </span>
+            )}
+            {onRefresh && (
+              <button
+                onClick={onRefresh}
+                disabled={refreshing}
+                className="text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+                aria-label="Refresh data"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+              </button>
             )}
             <span className="text-xs text-muted-foreground">
               by <span style={{ color: '#00E5A0' }} className="font-semibold">TrueViq</span>

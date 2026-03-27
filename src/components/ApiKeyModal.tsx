@@ -2,15 +2,16 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Key, FileSpreadsheet } from 'lucide-react';
+import { Key, FileSpreadsheet, Globe } from 'lucide-react';
 
 interface ApiKeyModalProps {
   open: boolean;
-  onSubmit: (apiKey: string, masterSheetId: string, selectionEodSheetId: string) => void;
+  onSubmit: (apiKey: string, clientId: string, masterSheetId: string, selectionEodSheetId: string) => void;
 }
 
 export function ApiKeyModal({ open, onSubmit }: ApiKeyModalProps) {
   const [apiKey, setApiKey] = useState('');
+  const [clientId, setClientId] = useState(sessionStorage.getItem('gp_client_id') || '');
   const [masterSheetId, setMasterSheetId] = useState(sessionStorage.getItem('gp_master_sheet_id') || '');
   const [selectionEodSheetId, setSelectionEodSheetId] = useState(sessionStorage.getItem('gp_selection_eod_sheet_id') || '');
 
@@ -23,7 +24,7 @@ export function ApiKeyModal({ open, onSubmit }: ApiKeyModalProps) {
             Connect RecruitPulse AI
           </DialogTitle>
           <DialogDescription className="text-muted-foreground">
-            Enter your Groq API key and Spreadsheet IDs to get started. Keys stay in session memory only.
+            Enter your credentials and Spreadsheet IDs to get started. Keys stay in session memory only.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 pt-2">
@@ -43,6 +44,18 @@ export function ApiKeyModal({ open, onSubmit }: ApiKeyModalProps) {
             >
               Get your free API key from Groq Console →
             </a>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+              <Globe className="h-3.5 w-3.5" />
+              Google OAuth Client ID
+            </label>
+            <Input
+              placeholder="xxxx.apps.googleusercontent.com"
+              value={clientId}
+              onChange={(e) => setClientId(e.target.value)}
+              className="bg-background border-border text-foreground placeholder:text-muted-foreground text-xs"
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
@@ -72,8 +85,8 @@ export function ApiKeyModal({ open, onSubmit }: ApiKeyModalProps) {
           </div>
           <Button
             className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-display"
-            disabled={!apiKey.startsWith('gsk_') || !masterSheetId.trim() || !selectionEodSheetId.trim()}
-            onClick={() => onSubmit(apiKey, masterSheetId.trim(), selectionEodSheetId.trim())}
+            disabled={!apiKey.startsWith('gsk_') || !clientId.trim() || !masterSheetId.trim() || !selectionEodSheetId.trim()}
+            onClick={() => onSubmit(apiKey, clientId.trim(), masterSheetId.trim(), selectionEodSheetId.trim())}
           >
             Connect & Launch
           </Button>

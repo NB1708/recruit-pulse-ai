@@ -6,7 +6,7 @@ declare global {
   }
 }
 
-const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets.readonly';
+const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
 
 const MONTH_ABBR_MAP: Record<string, string> = {
   jan: 'January', feb: 'February', mar: 'March', apr: 'April',
