@@ -3,6 +3,7 @@ import { ArrowRight, MessageCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { MasterTrackerRow, CandidateForWhatsApp } from '@/types/recruitment';
+import { getMessageGoal } from '@/utils/messageGoals';
 
 const STAGE_BADGE_COLORS: Record<string, string> = {
   'FB Pending': 'bg-rp-orange/20 text-rp-orange border-rp-orange/30',
@@ -100,6 +101,7 @@ export function CandidatesTab({ masterData, onSelectCandidate }: CandidatesTabPr
         {filtered.map(r => {
           const days = daysBetween(r.date);
           const badgeClass = STAGE_BADGE_COLORS[r.clientStatus] || STAGE_BADGE_COLORS[r.stage] || 'bg-muted text-muted-foreground border-border';
+          const { shortLabel, isDuplicate } = getMessageGoal(r.stage, r.clientStatus);
 
           return (
             <div
@@ -110,6 +112,7 @@ export function CandidatesTab({ masterData, onSelectCandidate }: CandidatesTabPr
                 role: r.role,
                 organisation: r.organisation,
                 clientStatus: r.clientStatus,
+                stage: r.stage,
                 recruiter: r.recruiter,
                 daysStuck: days,
                 contact: r.contact,
@@ -127,6 +130,13 @@ export function CandidatesTab({ masterData, onSelectCandidate }: CandidatesTabPr
                   </div>
                   <div className="text-xs text-muted-foreground mt-1">
                     {r.role} @ {r.organisation} · {r.recruiter}
+                  </div>
+                  <div className="text-xs mt-1">
+                    {isDuplicate ? (
+                      <span className="text-rp-orange">⚠️ {shortLabel}</span>
+                    ) : (
+                      <span className="text-muted-foreground">💬 Goal: {shortLabel}</span>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">

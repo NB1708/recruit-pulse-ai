@@ -25,7 +25,7 @@ export default function WhatsAppTab({ selectedCandidate, onBack, onGenerate, loa
     );
   }
 
-  const prompt = `You are a recruitment assistant for Hunar.AI. Generate a warm, short WhatsApp message in Hindi or Hinglish for a candidate named ${selectedCandidate.candidateName} who applied for ${selectedCandidate.role} at ${selectedCandidate.organisation} in ${selectedCandidate.location}. They have been at ${selectedCandidate.clientStatus} stage for ${selectedCandidate.daysStuck} days. Their recruiter is ${selectedCandidate.recruiter}. Write 3-4 lines, use relevant emojis, sound human not robotic, include a clear next step, sign off as '${selectedCandidate.recruiter} from Hunar.AI'`;
+  const prompt = `You are a recruitment assistant for TrueViq. Generate a warm, short WhatsApp message in Hindi or Hinglish for a candidate named ${selectedCandidate.candidateName} who applied for ${selectedCandidate.role} at ${selectedCandidate.organisation} in ${selectedCandidate.location}. They have been at ${selectedCandidate.clientStatus} stage for ${selectedCandidate.daysStuck} days. Their recruiter is ${selectedCandidate.recruiter}. Write 3-4 lines, use relevant emojis, sound human not robotic, include a clear next step, sign off as '${selectedCandidate.recruiter} from TrueViq'`;
 
   const generate = async () => {
     const res = await onGenerate(prompt);
