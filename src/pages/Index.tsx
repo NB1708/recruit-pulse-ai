@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
+import { SplashScreen } from '@/components/SplashScreen';
 import { ApiKeyModal } from '@/components/ApiKeyModal';
 import { SettingsModal } from '@/components/SettingsModal';
 import DashboardTab from '@/components/tabs/DashboardTab';
@@ -13,14 +14,16 @@ import { useRecruitmentData } from '@/hooks/useRecruitmentData';
 
 import type { CandidateForWhatsApp, TabId } from '@/types/recruitment';
 
+type AppScreen = 'splash' | 'config' | 'dashboard';
+
 const now = new Date();
 const currentMonthName = now.toLocaleString('default', { month: 'long' });
 const currentYear = String(now.getFullYear());
 
 const Index = () => {
+  const [appScreen, setAppScreen] = useState<AppScreen>('splash');
   const [activeTab, setActiveTab] = useState<TabId>('dashboard');
   const [selectedCandidate, setSelectedCandidate] = useState<CandidateForWhatsApp | null>(null);
-  const [apiModalOpen, setApiModalOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [monthFilter, setMonthFilter] = useState(currentMonthName);
   const [yearFilter, setYearFilter] = useState(currentYear);
@@ -34,24 +37,12 @@ const Index = () => {
     return [...set].sort();
   }, [master]);
 
-  useEffect(() => {
-    const storedKey = sessionStorage.getItem('groq_api_key');
-    const storedMaster = sessionStorage.getItem('gp_master_sheet_id');
-    const storedSelectionEod = sessionStorage.getItem('gp_selection_eod_sheet_id');
-    if (storedKey && storedMaster && storedSelectionEod) {
-      setupKey(storedKey);
-      setApiModalOpen(false);
-    } else {
-      setApiModalOpen(true);
-    }
-  }, [setupKey]);
-
   const handleSetup = (apiKey: string, masterSheetId: string, selectionEodSheetId: string) => {
     sessionStorage.setItem('groq_api_key', apiKey);
     sessionStorage.setItem('gp_master_sheet_id', masterSheetId);
     sessionStorage.setItem('gp_selection_eod_sheet_id', selectionEodSheetId);
     setupKey(apiKey);
-    setApiModalOpen(false);
+    setAppScreen('dashboard');
   };
 
   const handleSettingsSave = (apiKey: string, masterSheetId: string, selectionEodSheetId: string) => {
@@ -70,9 +61,23 @@ const Index = () => {
     setActiveTab('whatsapp');
   };
 
+  // ── SPLASH ──
+  if (appScreen === 'splash') {
+    return <SplashScreen onEnter={() => setAppScreen('config')} />;
+  }
+
+  // ── CONFIG ──
+  if (appScreen === 'config') {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center" style={{ background: '#080B11' }}>
+        <ApiKeyModal open={true} onSubmit={handleSetup} />
+      </div>
+    );
+  }
+
+  // ── DASHBOARD ──
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <ApiKeyModal open={apiModalOpen} onSubmit={handleSetup} />
       <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} onSave={handleSettingsSave} />
       <Header
         activeTab={activeTab}
