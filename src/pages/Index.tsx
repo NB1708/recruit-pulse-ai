@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { SplashScreen } from '@/components/SplashScreen';
@@ -28,21 +28,42 @@ const Index = () => {
   const [monthFilter, setMonthFilter] = useState(currentMonthName);
   const [yearFilter, setYearFilter] = useState(currentYear);
   const [cycleStartDay, setCycleStartDay] = useState(5);
+  const [sheetError, setSheetError] = useState<string | null>(null);
 
   const { loading: aiLoading, error: aiError, generate, setupKey } = useAI();
-  const { master, selection, eod, loading: sheetLoading, error: sheetError, connected, connectGoogleSheets } = useRecruitmentData();
+  const { master, selection, eod, loading: sheetLoading, error: hookSheetError, connected, connectGoogleSheets } = useRecruitmentData();
+
+  const displayError = sheetError || hookSheetError;
 
   const years = useMemo(() => {
     const set = new Set(master.map(r => (r.year || '').trim()).filter(Boolean));
     return [...set].sort();
   }, [master]);
 
-  const handleSetup = (apiKey: string, masterSheetId: string, selectionEodSheetId: string) => {
+  const handleSetup = async (apiKey: string, clientId: string, masterSheetId: string, selectionEodSheetId: string) => {
     sessionStorage.setItem('groq_api_key', apiKey);
+    sessionStorage.setItem('gp_client_id', clientId);
     sessionStorage.setItem('gp_master_sheet_id', masterSheetId);
     sessionStorage.setItem('gp_selection_eod_sheet_id', selectionEodSheetId);
     setupKey(apiKey);
     setAppScreen('dashboard');
+
+    // Trigger Google Sheets connection automatically
+    try {
+      setSheetError(null);
+      await connectGoogleSheets(clientId, masterSheetId, selectionEodSheetId);
+    } catch (e: any) {
+      const msg = e?.message || '';
+      if (msg.includes('401') || msg.includes('403')) {
+        setSheetError('Authentication failed. Please reconnect your Google account.');
+      } else if (msg.includes('429')) {
+        setSheetError('Google API limit reached. Try again in a few minutes.');
+      } else if (msg.includes('404') || msg.includes('Invalid')) {
+        setSheetError('Invalid Sheets ID. Please check and reconnect.');
+      } else {
+        setSheetError(msg || 'Failed to connect Google Sheets.');
+      }
+    }
   };
 
   const handleSettingsSave = (apiKey: string, masterSheetId: string, selectionEodSheetId: string) => {
@@ -52,8 +73,33 @@ const Index = () => {
     setupKey(apiKey);
   };
 
-  const handleReconnect = () => {
-    setSettingsOpen(true);
+  const handleReconnect = async () => {
+    const clientId = sessionStorage.getItem('gp_client_id') || '';
+    const masterSheetId = sessionStorage.getItem('gp_master_sheet_id') || '';
+    const selectionEodSheetId = sessionStorage.getItem('gp_selection_eod_sheet_id') || '';
+    if (!clientId || !masterSheetId || !selectionEodSheetId) {
+      setSettingsOpen(true);
+      return;
+    }
+    try {
+      setSheetError(null);
+      await connectGoogleSheets(clientId, masterSheetId, selectionEodSheetId);
+    } catch (e: any) {
+      setSheetError(e?.message || 'Failed to reconnect.');
+    }
+  };
+
+  const handleRefresh = async () => {
+    const clientId = sessionStorage.getItem('gp_client_id') || '';
+    const masterSheetId = sessionStorage.getItem('gp_master_sheet_id') || '';
+    const selectionEodSheetId = sessionStorage.getItem('gp_selection_eod_sheet_id') || '';
+    if (!clientId || !masterSheetId || !selectionEodSheetId) return;
+    try {
+      setSheetError(null);
+      await connectGoogleSheets(clientId, masterSheetId, selectionEodSheetId);
+    } catch (e: any) {
+      setSheetError(e?.message || 'Sync failed.');
+    }
   };
 
   const onSelectCandidate = (candidate: CandidateForWhatsApp) => {
@@ -79,12 +125,23 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} onSave={handleSettingsSave} />
+
+      {/* Error banner */}
+      {displayError && (
+        <div className="bg-destructive/10 border-b border-destructive/30 px-4 py-2 flex items-center justify-between">
+          <span className="text-xs text-destructive">❌ {displayError}</span>
+          <button onClick={() => setSheetError(null)} className="text-xs text-muted-foreground hover:text-foreground ml-4">Dismiss</button>
+        </div>
+      )}
+
       <Header
         activeTab={activeTab}
         onTabChange={setActiveTab}
         sheetsConnected={connected}
         onSettingsOpen={() => setSettingsOpen(true)}
         onReconnect={handleReconnect}
+        onRefresh={handleRefresh}
+        refreshing={sheetLoading}
       />
 
       <main className="mx-auto max-w-[940px] space-y-4 px-4 py-6">
