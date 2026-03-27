@@ -7,6 +7,15 @@ function sanitize(v: string) {
   return (v || '').trim().toLowerCase();
 }
 
+function firstWord(v: string) {
+  return sanitize(v).split(/[\s\-–]+/)[0];
+}
+
+function matchesClient(value: string, clientKey: string) {
+  const fw = firstWord(value);
+  return fw === clientKey;
+}
+
 interface Props {
   masterData: MasterTrackerRow[];
   selectionData: SelectionSheetRow[];
@@ -17,27 +26,25 @@ export default function ClientAnalysisTab({ masterData, selectionData }: Props) 
 
   const clientOptions = useMemo(() => {
     const set = new Set<string>();
-    masterData.forEach(r => {
-      const org = r.organisation.trim();
-      if (org) set.add(org);
-    });
-    selectionData.forEach(r => {
-      const comp = r.company.trim();
-      if (comp) set.add(comp);
-    });
+    const addFirstWord = (v: string) => {
+      const fw = (v || '').trim().split(/[\s\-–]+/)[0];
+      if (fw) set.add(fw);
+    };
+    masterData.forEach(r => addFirstWord(r.organisation));
+    selectionData.forEach(r => addFirstWord(r.company));
     return [...set].sort();
   }, [masterData, selectionData]);
 
   const metrics = useMemo(() => {
     if (!selectedClient) return null;
-    const key = sanitize(selectedClient);
+    const key = selectedClient.toLowerCase();
 
-    const cvShared = masterData.filter(r => sanitize(r.organisation) === key).length;
+    const cvShared = masterData.filter(r => matchesClient(r.organisation, key)).length;
 
     let selections = 0;
     let joined = 0;
     selectionData.forEach(r => {
-      if (sanitize(r.company) !== key) return;
+      if (!matchesClient(r.company, key)) return;
       const status = sanitize(r.candidateStatus);
       if (status.includes('select') || status === 'selected') selections++;
       if (status === 'joined') joined++;
