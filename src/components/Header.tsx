@@ -1,4 +1,4 @@
-import { Zap } from 'lucide-react';
+import { Zap, Settings } from 'lucide-react';
 import type { TabId } from '@/types/recruitment';
 
 const tabs: { id: TabId; label: string; icon: string }[] = [
@@ -12,9 +12,12 @@ const tabs: { id: TabId; label: string; icon: string }[] = [
 interface HeaderProps {
   activeTab: TabId;
   onTabChange: (tab: TabId) => void;
+  sheetsConnected: boolean;
+  onSettingsOpen: () => void;
+  onReconnect: () => void;
 }
 
-export function Header({ activeTab, onTabChange }: HeaderProps) {
+export function Header({ activeTab, onTabChange, sheetsConnected, onSettingsOpen, onReconnect }: HeaderProps) {
   return (
     <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50">
       <div className="max-w-[940px] mx-auto px-4 py-3">
@@ -30,7 +33,20 @@ export function Header({ activeTab, onTabChange }: HeaderProps) {
               <div className="h-2 w-2 rounded-full bg-rp-green animate-pulse-green" />
               <span className="text-xs text-rp-green font-medium">Live Pipeline</span>
             </div>
-            <span className="text-xs text-muted-foreground">Powered by Hunar.AI</span>
+            {sheetsConnected ? (
+              <span className="text-xs font-medium text-rp-green flex items-center gap-1">✅ Sheets Connected</span>
+            ) : (
+              <span className="text-xs font-medium text-destructive flex items-center gap-1">
+                ❌ Sheets Disconnected
+                <button onClick={onReconnect} className="underline ml-1 text-primary hover:text-primary/80">Reconnect</button>
+              </span>
+            )}
+            <span className="text-xs text-muted-foreground">
+              by <span style={{ color: '#00E5A0' }} className="font-semibold">TrueViq</span>
+            </span>
+            <button onClick={onSettingsOpen} className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Settings">
+              <Settings className="h-4 w-4" />
+            </button>
           </div>
         </div>
         <nav className="flex gap-1">

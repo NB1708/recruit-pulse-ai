@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { ApiKeyModal } from '@/components/ApiKeyModal';
-import GoogleSheetsPanel from '@/components/GoogleSheetsPanel';
+import { SettingsModal } from '@/components/SettingsModal';
 import DashboardTab from '@/components/tabs/DashboardTab';
 import CandidatesTab from '@/components/tabs/CandidatesTab';
 import WhatsAppTab from '@/components/tabs/WhatsAppTab';
@@ -13,7 +13,6 @@ import { useRecruitmentData } from '@/hooks/useRecruitmentData';
 
 import type { CandidateForWhatsApp, TabId } from '@/types/recruitment';
 
-
 const now = new Date();
 const currentMonthName = now.toLocaleString('default', { month: 'long' });
 const currentYear = String(now.getFullYear());
@@ -22,6 +21,7 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState<TabId>('dashboard');
   const [selectedCandidate, setSelectedCandidate] = useState<CandidateForWhatsApp | null>(null);
   const [apiModalOpen, setApiModalOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [monthFilter, setMonthFilter] = useState(currentMonthName);
   const [yearFilter, setYearFilter] = useState(currentYear);
   const [cycleStartDay, setCycleStartDay] = useState(5);
@@ -54,6 +54,17 @@ const Index = () => {
     setApiModalOpen(false);
   };
 
+  const handleSettingsSave = (apiKey: string, masterSheetId: string, selectionEodSheetId: string) => {
+    sessionStorage.setItem('groq_api_key', apiKey);
+    sessionStorage.setItem('gp_master_sheet_id', masterSheetId);
+    sessionStorage.setItem('gp_selection_eod_sheet_id', selectionEodSheetId);
+    setupKey(apiKey);
+  };
+
+  const handleReconnect = () => {
+    setSettingsOpen(true);
+  };
+
   const onSelectCandidate = (candidate: CandidateForWhatsApp) => {
     setSelectedCandidate(candidate);
     setActiveTab('whatsapp');
@@ -62,11 +73,16 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <ApiKeyModal open={apiModalOpen} onSubmit={handleSetup} />
-      <Header activeTab={activeTab} onTabChange={setActiveTab} />
+      <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} onSave={handleSettingsSave} />
+      <Header
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        sheetsConnected={connected}
+        onSettingsOpen={() => setSettingsOpen(true)}
+        onReconnect={handleReconnect}
+      />
 
       <main className="mx-auto max-w-[940px] space-y-4 px-4 py-6">
-        <GoogleSheetsPanel connected={connected} loading={sheetLoading} error={sheetError} onConnect={connectGoogleSheets} />
-
         {activeTab === 'dashboard' && (
           <DashboardTab
             masterData={master}
