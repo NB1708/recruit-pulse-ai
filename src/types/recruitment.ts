@@ -68,6 +68,7 @@ export interface CandidateForWhatsApp {
   role: string;
   organisation: string;
   clientStatus: string;
+  stage: string;
   recruiter: string;
   daysStuck: number;
   contact: string;
