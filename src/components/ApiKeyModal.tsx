@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Key, FileSpreadsheet, Globe } from 'lucide-react';
+import { Key, FileSpreadsheet, Globe, Lightbulb } from 'lucide-react';
 
 interface ApiKeyModalProps {
   open: boolean;
@@ -13,7 +13,7 @@ export function ApiKeyModal({ open, onSubmit }: ApiKeyModalProps) {
   const [apiKey, setApiKey] = useState('');
   const [clientId, setClientId] = useState(sessionStorage.getItem('gp_client_id') || '');
   const [masterSheetId, setMasterSheetId] = useState(sessionStorage.getItem('gp_master_sheet_id') || '');
-  const [selectionEodSheetId, setSelectionEodSheetId] = useState(sessionStorage.getItem('gp_selection_eod_sheet_id') || '');
+  const [eodSheetId, setEodSheetId] = useState(sessionStorage.getItem('gp_selection_eod_sheet_id') || '');
 
   return (
     <Dialog open={open} onOpenChange={() => {}}>
@@ -57,38 +57,50 @@ export function ApiKeyModal({ open, onSubmit }: ApiKeyModalProps) {
               className="bg-background border-border text-foreground placeholder:text-muted-foreground text-xs"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-3">
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
                 <FileSpreadsheet className="h-3.5 w-3.5" />
-                Master Tracker Sheet ID
+                Master Tracker &amp; Selection Sheet ID
               </label>
               <Input
-                placeholder="Spreadsheet ID..."
+                placeholder="Enter Sheet ID containing MASTER TRACKER and SELECTION SHEET tabs"
                 value={masterSheetId}
                 onChange={(e) => setMasterSheetId(e.target.value)}
                 className="bg-background border-border text-foreground placeholder:text-muted-foreground text-xs"
               />
+              <p className="text-[11px] text-muted-foreground">
+                This sheet must have 'MASTER TRACKER' and 'SELECTION SHEET' tabs
+              </p>
+            </div>
+            <div className="flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-2">
+              <Lightbulb className="h-3.5 w-3.5 text-primary shrink-0" />
+              <p className="text-[11px] text-primary">
+                If all 3 tabs are in the same Google Sheet, enter the same Sheet ID in both fields above
+              </p>
             </div>
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
                 <FileSpreadsheet className="h-3.5 w-3.5" />
-                Selection & EOD Sheet ID
+                EOD Sheet ID
               </label>
               <Input
-                placeholder="Spreadsheet ID..."
-                value={selectionEodSheetId}
-                onChange={(e) => setSelectionEodSheetId(e.target.value)}
+                placeholder="Enter Sheet ID containing EOD SHEET tab"
+                value={eodSheetId}
+                onChange={(e) => setEodSheetId(e.target.value)}
                 className="bg-background border-border text-foreground placeholder:text-muted-foreground text-xs"
               />
+              <p className="text-[11px] text-muted-foreground">
+                This sheet must have 'EOD SHEET' tab. If your EOD sheet is in the same file as Master Tracker, enter the same ID here.
+              </p>
             </div>
           </div>
           <Button
             className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-display"
-            disabled={!apiKey.startsWith('gsk_') || !clientId.trim() || !masterSheetId.trim() || !selectionEodSheetId.trim()}
-            onClick={() => onSubmit(apiKey, clientId.trim(), masterSheetId.trim(), selectionEodSheetId.trim())}
+            disabled={!apiKey.startsWith('gsk_') || !clientId.trim() || !masterSheetId.trim() || !eodSheetId.trim()}
+            onClick={() => onSubmit(apiKey, clientId.trim(), masterSheetId.trim(), eodSheetId.trim())}
           >
-            Connect & Launch
+            Connect &amp; Launch
           </Button>
         </div>
       </DialogContent>
