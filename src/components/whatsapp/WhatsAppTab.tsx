@@ -32,12 +32,31 @@ export function WhatsAppTab({ candidate, onBack, onGenerate, aiLoading }: WhatsA
   const { goal: messageGoal, shortLabel, isDuplicate } = getMessageGoal(candidate.stage, candidate.clientStatus);
 
   const generateMessage = async () => {
-    const prompt = `You are a recruitment assistant for TrueViq. Generate a warm, short WhatsApp message in Hindi or Hinglish for a candidate named ${candidate.candidateName} who applied for ${candidate.role} at ${candidate.organisation} in ${candidate.location}. They have been at ${candidate.clientStatus} stage for ${candidate.daysStuck} days. Their recruiter is ${candidate.recruiter}.
+    const prompt = `You are an expert recruitment WhatsApp copywriter for TrueViq, a recruitment agency. Your job is to write SHORT, SPECIFIC, PROFESSIONAL WhatsApp messages in Hinglish (mix of Hindi + English).
 
-Current Stage Goal: ${messageGoal}
-Your message MUST achieve this goal. Keep it natural, warm and under 4 lines. Do not directly copy the goal into the message — just use it as your intent and write naturally.
+CANDIDATE CONTEXT:
+- Name: ${candidate.candidateName}
+- Applied for: ${candidate.role} at ${candidate.organisation}, ${candidate.location}
+- Current Status: ${candidate.clientStatus}
+- Stage: ${candidate.stage}
+- Days in this stage: ${candidate.daysStuck}
+- Recruiter: ${candidate.recruiter}
 
-Use relevant emojis, sound human not robotic, include a clear next step, sign off as '${candidate.recruiter} from TrueViq'`;
+MESSAGE INTENT: ${messageGoal}
+
+STRICT RULES:
+1. MAX 3-4 lines. Be concise.
+2. NEVER mention exact number of days stuck (like "23 din ho gaye"). This sounds unprofessional.
+3. NEVER fabricate details — do NOT invent interview times, dates, meeting links, salary figures, or any information not provided above.
+4. NEVER say things like "aaj 4 baje interview hai" or "15 min pehle pahunchein" — you do NOT know the schedule.
+5. Use the candidate's FIRST NAME only for a personal touch.
+6. Include ONE specific call-to-action (e.g., "Kya aap ek quick call ke liye available hain?" or "Please apna updated resume share karein").
+7. Keep tone warm but professional — like a helpful recruiter, not a friend.
+8. Use 1-2 relevant emojis max, not excessive.
+9. Sign off as: "${candidate.recruiter}, TrueViq"
+10. Write naturally in Hinglish. Do NOT write in pure Hindi or pure English.
+
+Generate ONLY the message text. No explanations, no subject line, no formatting.`;
     const result = await onGenerate(prompt);
     if (result) setMessage(result);
   };
