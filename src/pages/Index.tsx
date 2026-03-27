@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { SplashScreen } from '@/components/SplashScreen';
+import { SetupGuide } from '@/components/SetupGuide';
 import { ApiKeyModal } from '@/components/ApiKeyModal';
 import { SettingsModal } from '@/components/SettingsModal';
 import DashboardTab from '@/components/tabs/DashboardTab';
@@ -14,7 +15,7 @@ import { useRecruitmentData } from '@/hooks/useRecruitmentData';
 
 import type { CandidateForWhatsApp, TabId } from '@/types/recruitment';
 
-type AppScreen = 'splash' | 'config' | 'dashboard';
+type AppScreen = 'splash' | 'guide' | 'config' | 'dashboard';
 
 const now = new Date();
 const currentMonthName = now.toLocaleString('default', { month: 'long' });
@@ -109,7 +110,11 @@ const Index = () => {
 
   // ── SPLASH ──
   if (appScreen === 'splash') {
-    return <SplashScreen onEnter={() => setAppScreen('config')} />;
+    return <SplashScreen onEnter={() => setAppScreen('guide')} />;
+  }
+
+  if (appScreen === 'guide') {
+    return <SetupGuide onContinue={() => setAppScreen('config')} />;
   }
 
   // ── CONFIG ──
