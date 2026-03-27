@@ -109,16 +109,18 @@ export default function DashboardTab({ masterData, selectionData, eodData, onAiA
     });
   }, [eodData, mFilter, yFilter]);
 
-  // Get yesterday's EOD data
+  // Get yesterday's EOD data by parsing exact date
   const yesterdayEod = useMemo(() => {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    const yDay = yesterday.getDate();
-    const yMonth = yesterday.toLocaleString('default', { month: 'short' }).toLowerCase();
+    const yDate = yesterday.getDate();
+    const yMonth = yesterday.getMonth();
+    const yYear = yesterday.getFullYear();
     return (eodData || []).filter(r => {
       if (!r.date) return false;
-      const d = sanitize(r.date);
-      return d.includes(String(yDay)) && d.includes(yMonth);
+      const parsed = parseDate(r.date);
+      if (isNaN(parsed.getTime())) return false;
+      return parsed.getDate() === yDate && parsed.getMonth() === yMonth && parsed.getFullYear() === yYear;
     });
   }, [eodData]);
 
