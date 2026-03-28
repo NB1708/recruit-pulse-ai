@@ -145,6 +145,48 @@ function parseEod(values: string[][]): EODSheetRow[] {
   return results;
 }
 
+/**
+ * Redirect-based OAuth flow — works on mobile browsers (no popup).
+ * Redirects the user to Google's OAuth consent page.
+ * After consent, Google redirects back with the access_token in the URL hash.
+ */
+export function startGoogleOAuthRedirect(clientId: string): void {
+  const redirectUri = window.location.origin + '/';
+  const params = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    response_type: 'token',
+    scope: SHEETS_SCOPE,
+    prompt: 'consent',
+    include_granted_scopes: 'true',
+  });
+  window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+}
+
+/**
+ * After Google redirects back, the access_token is in the URL hash.
+ * Parse it and clean up the URL.
+ */
+export function extractAccessTokenFromHash(): string | null {
+  const hash = window.location.hash;
+  if (!hash || !hash.includes('access_token')) return null;
+
+  const params = new URLSearchParams(hash.substring(1));
+  const token = params.get('access_token');
+
+  if (token) {
+    sessionStorage.setItem('gp_access_token', token);
+    // Clean the URL hash so it doesn't linger
+    window.history.replaceState(null, '', window.location.pathname + window.location.search);
+  }
+
+  return token;
+}
+
+/**
+ * Legacy popup-based flow kept as fallback (desktop).
+ * Prefer startGoogleOAuthRedirect for universal compatibility.
+ */
 async function loadGoogleIdentityScript(): Promise<void> {
   if (window.google?.accounts?.oauth2) return;
   await new Promise<void>((resolve, reject) => {
