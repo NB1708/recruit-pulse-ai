@@ -23,8 +23,15 @@ function normalize(value: string): string {
   return value.trim().toLowerCase();
 }
 
+export function cleanGoogleClientId(clientId: string): string {
+  return clientId
+    .replace('https://', '')
+    .replace('http://', '')
+    .trim();
+}
+
 export function validateGoogleClientId(clientId: string): string | null {
-  const trimmedClientId = clientId.trim();
+  const trimmedClientId = cleanGoogleClientId(clientId);
   if (!trimmedClientId || !trimmedClientId.endsWith('.apps.googleusercontent.com') || !trimmedClientId.includes('-')) {
     return '⚠️ Invalid Client ID format. It must end with .apps.googleusercontent.com';
   }
@@ -173,7 +180,7 @@ function parseEod(values: string[][]): EODSheetRow[] {
  * After consent, Google redirects back with the access_token in the URL hash.
  */
 export function startGoogleOAuthRedirect(clientId: string): void {
-  const trimmedClientId = clientId.trim();
+  const trimmedClientId = cleanGoogleClientId(clientId);
   const validationError = validateGoogleClientId(trimmedClientId);
   if (validationError) {
     throw new Error(validationError);

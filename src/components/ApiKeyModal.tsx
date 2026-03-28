@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { validateGoogleClientId } from '@/services/googleSheets';
+import { validateGoogleClientId, cleanGoogleClientId } from '@/services/googleSheets';
 import { Key, FileSpreadsheet, Globe, Lightbulb } from 'lucide-react';
 
 interface ApiKeyModalProps {
@@ -64,14 +64,15 @@ export function ApiKeyModal({ open, onSubmit }: ApiKeyModalProps) {
               Google OAuth Client ID
             </label>
             <Input
-              placeholder="xxxx.apps.googleusercontent.com"
+              placeholder="123456789-abc.apps.googleusercontent.com"
               value={clientId}
               onChange={(e) => {
-                setClientId(e.target.value);
+                setClientId(cleanGoogleClientId(e.target.value));
                 if (clientIdError) setClientIdError(null);
               }}
               className="bg-background border-border text-foreground placeholder:text-muted-foreground text-xs"
             />
+            <p className="text-[11px] text-muted-foreground">Do not include https:// — just paste the ID directly</p>
             {clientIdError && <p className="text-[11px] text-destructive">{clientIdError}</p>}
           </div>
           <div className="space-y-3">
