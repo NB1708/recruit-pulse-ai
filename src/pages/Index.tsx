@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { extractAccessTokenFromHash } from '@/services/googleSheets';
+import { extractOAuthRedirectResult, formatClientIdPreview } from '@/services/googleSheets';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { SplashScreen } from '@/components/SplashScreen';
@@ -18,6 +18,11 @@ import type { CandidateForWhatsApp, TabId } from '@/types/recruitment';
 
 type AppScreen = 'splash' | 'guide' | 'config' | 'dashboard';
 
+type DashboardError = {
+  message: string;
+  clientIdPreview?: string;
+};
+
 const now = new Date();
 const currentMonthName = now.toLocaleString('default', { month: 'long' });
 const currentYear = String(now.getFullYear());
@@ -30,27 +35,39 @@ const Index = () => {
   const [monthFilter, setMonthFilter] = useState(currentMonthName);
   const [yearFilter, setYearFilter] = useState(currentYear);
   const [cycleStartDay, setCycleStartDay] = useState(5);
-  const [sheetError, setSheetError] = useState<string | null>(null);
+  const [sheetError, setSheetError] = useState<DashboardError | null>(null);
 
   const { loading: aiLoading, error: aiError, generate, setupKey } = useAI();
   const { master, selection, eod, loading: sheetLoading, error: hookSheetError, connected, connectGoogleSheets, connectWithToken } = useRecruitmentData();
 
-  const displayError = sheetError || hookSheetError;
+  const displayError = sheetError || (hookSheetError ? { message: hookSheetError } : null);
 
   // Handle OAuth redirect return
   useEffect(() => {
-    const token = extractAccessTokenFromHash();
+    const { accessToken, error, errorDescription } = extractOAuthRedirectResult();
     const isPending = sessionStorage.getItem('gp_oauth_pending') === 'true';
+    const clientIdPreview = formatClientIdPreview(sessionStorage.getItem('gp_client_id') || '');
 
-    if (token && isPending) {
+    if (error && isPending) {
+      sessionStorage.removeItem('gp_oauth_pending');
+      setAppScreen('dashboard');
+      setSheetError({
+        message: `Auth Error: ${errorDescription || error}`,
+        clientIdPreview,
+      });
+      return;
+    }
+
+    if (accessToken && isPending) {
       sessionStorage.removeItem('gp_oauth_pending');
       // Restore API key
       const savedApiKey = sessionStorage.getItem('groq_api_key') || '';
       if (savedApiKey) setupKey(savedApiKey);
       // Jump straight to dashboard and fetch data
       setAppScreen('dashboard');
-      connectWithToken(token).catch((e: any) => {
-        setSheetError(e?.message || 'Failed to fetch sheet data after login.');
+      setSheetError(null);
+      connectWithToken(accessToken).catch((e: any) => {
+        setSheetError({ message: e?.message || 'Failed to fetch sheet data after login.' });
       });
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -66,12 +83,21 @@ const Index = () => {
     sessionStorage.setItem('gp_master_sheet_id', masterSheetId);
     sessionStorage.setItem('gp_selection_eod_sheet_id', selectionEodSheetId);
     setupKey(apiKey);
-    // This will redirect to Google OAuth — page will unload
-    await connectGoogleSheets(clientId, masterSheetId, selectionEodSheetId);
+    try {
+      // This will redirect to Google OAuth — page will unload
+      await connectGoogleSheets(clientId, masterSheetId, selectionEodSheetId);
+    } catch (e: any) {
+      setSheetError({
+        message: e?.message || 'Failed to start Google authentication.',
+        clientIdPreview: formatClientIdPreview(clientId),
+      });
+      setAppScreen('dashboard');
+    }
   };
 
-  const handleSettingsSave = (apiKey: string, masterSheetId: string, selectionEodSheetId: string) => {
+  const handleSettingsSave = (apiKey: string, clientId: string, masterSheetId: string, selectionEodSheetId: string) => {
     sessionStorage.setItem('groq_api_key', apiKey);
+    sessionStorage.setItem('gp_client_id', clientId);
     sessionStorage.setItem('gp_master_sheet_id', masterSheetId);
     sessionStorage.setItem('gp_selection_eod_sheet_id', selectionEodSheetId);
     setupKey(apiKey);
@@ -93,24 +119,38 @@ const Index = () => {
         await connectWithToken(existingToken);
       } catch {
         // Token expired, redirect for new one
-        await connectGoogleSheets(clientId, masterSheetId, selectionEodSheetId);
+        try {
+          await connectGoogleSheets(clientId, masterSheetId, selectionEodSheetId);
+        } catch (e: any) {
+          setSheetError({
+            message: e?.message || 'Failed to start Google authentication.',
+            clientIdPreview: formatClientIdPreview(clientId),
+          });
+        }
       }
     } else {
-      await connectGoogleSheets(clientId, masterSheetId, selectionEodSheetId);
+      try {
+        await connectGoogleSheets(clientId, masterSheetId, selectionEodSheetId);
+      } catch (e: any) {
+        setSheetError({
+          message: e?.message || 'Failed to start Google authentication.',
+          clientIdPreview: formatClientIdPreview(clientId),
+        });
+      }
     }
   };
 
   const handleRefresh = async () => {
     const existingToken = sessionStorage.getItem('gp_access_token');
     if (!existingToken) {
-      setSheetError('No active session. Please reconnect Google Sheets.');
+      setSheetError({ message: 'No active session. Please reconnect Google Sheets.' });
       return;
     }
     try {
       setSheetError(null);
       await connectWithToken(existingToken);
     } catch (e: any) {
-      setSheetError(e?.message || 'Sync failed. Try reconnecting.');
+      setSheetError({ message: e?.message || 'Sync failed. Try reconnecting.' });
     }
   };
 
@@ -145,7 +185,12 @@ const Index = () => {
       {/* Error banner */}
       {displayError && (
         <div className="bg-destructive/10 border-b border-destructive/30 px-4 py-2 flex items-center justify-between">
-          <span className="text-xs text-destructive">❌ {displayError}</span>
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-destructive">{displayError.message}</p>
+            {displayError.clientIdPreview && (
+              <p className="text-[11px] text-destructive/90">Client ID being used: {displayError.clientIdPreview}</p>
+            )}
+          </div>
           <button onClick={() => setSheetError(null)} className="text-xs text-muted-foreground hover:text-foreground ml-4">Dismiss</button>
         </div>
       )}
