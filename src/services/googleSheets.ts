@@ -187,7 +187,7 @@ export function startGoogleOAuthRedirect(clientId: string): void {
   }
 
   console.log('[Google OAuth] Using Client ID:', trimmedClientId);
-  const redirectUri = window.location.origin + '/';
+  const redirectUri = window.location.origin.replace(/\/$/, '');
   const params = new URLSearchParams({
     client_id: trimmedClientId,
     redirect_uri: redirectUri,
