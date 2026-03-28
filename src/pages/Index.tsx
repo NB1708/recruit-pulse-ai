@@ -85,24 +85,32 @@ const Index = () => {
       setSettingsOpen(true);
       return;
     }
-    try {
-      setSheetError(null);
+    // Try using existing token first, else redirect
+    const existingToken = sessionStorage.getItem('gp_access_token');
+    if (existingToken) {
+      try {
+        setSheetError(null);
+        await connectWithToken(existingToken);
+      } catch {
+        // Token expired, redirect for new one
+        await connectGoogleSheets(clientId, masterSheetId, selectionEodSheetId);
+      }
+    } else {
       await connectGoogleSheets(clientId, masterSheetId, selectionEodSheetId);
-    } catch (e: any) {
-      setSheetError(e?.message || 'Failed to reconnect.');
     }
   };
 
   const handleRefresh = async () => {
-    const clientId = sessionStorage.getItem('gp_client_id') || '';
-    const masterSheetId = sessionStorage.getItem('gp_master_sheet_id') || '';
-    const selectionEodSheetId = sessionStorage.getItem('gp_selection_eod_sheet_id') || '';
-    if (!clientId || !masterSheetId || !selectionEodSheetId) return;
+    const existingToken = sessionStorage.getItem('gp_access_token');
+    if (!existingToken) {
+      setSheetError('No active session. Please reconnect Google Sheets.');
+      return;
+    }
     try {
       setSheetError(null);
-      await connectGoogleSheets(clientId, masterSheetId, selectionEodSheetId);
+      await connectWithToken(existingToken);
     } catch (e: any) {
-      setSheetError(e?.message || 'Sync failed.');
+      setSheetError(e?.message || 'Sync failed. Try reconnecting.');
     }
   };
 
