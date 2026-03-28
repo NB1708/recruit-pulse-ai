@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { Header } from '@/components/Header';
+import { useEffect, useMemo, useState } from 'react';
+import { extractAccessTokenFromHash } from '@/services/googleSheets';
 import { Footer } from '@/components/Footer';
 import { SplashScreen } from '@/components/SplashScreen';
 import { SetupGuide } from '@/components/SetupGuide';
