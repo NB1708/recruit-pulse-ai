@@ -1,12 +1,12 @@
 import type { EODSheetRow, MasterTrackerRow, SelectionSheetRow } from '@/types/recruitment';
 
-declare global {
-  interface Window {
-    google?: any;
-  }
-}
-
 const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
+
+export interface OAuthRedirectResult {
+  accessToken: string | null;
+  error: string | null;
+  errorDescription: string | null;
+}
 
 const MONTH_ABBR_MAP: Record<string, string> = {
   jan: 'January', feb: 'February', mar: 'March', apr: 'April',
@@ -21,6 +21,28 @@ function normalizeMonth(raw: string): string {
 
 function normalize(value: string): string {
   return value.trim().toLowerCase();
+}
+
+export function validateGoogleClientId(clientId: string): string | null {
+  const trimmedClientId = clientId.trim();
+  if (!trimmedClientId || !trimmedClientId.endsWith('.apps.googleusercontent.com') || !trimmedClientId.includes('-')) {
+    return '⚠️ Invalid Client ID format. It must end with .apps.googleusercontent.com';
+  }
+  return null;
+}
+
+export function formatClientIdPreview(clientId: string): string {
+  const trimmedClientId = clientId.trim();
+  return trimmedClientId ? `${trimmedClientId.slice(0, 20)}...` : 'Not available';
+}
+
+function cleanupOAuthUrl(): void {
+  const url = new URL(window.location.href);
+  url.hash = '';
+  ['code', 'scope', 'authuser', 'prompt', 'error', 'error_description', 'error_subtype', 'state'].forEach((key) => {
+    url.searchParams.delete(key);
+  });
+  window.history.replaceState(null, '', `${url.pathname}${url.search}`);
 }
 
 function emailToName(email: string): string {
@@ -151,9 +173,16 @@ function parseEod(values: string[][]): EODSheetRow[] {
  * After consent, Google redirects back with the access_token in the URL hash.
  */
 export function startGoogleOAuthRedirect(clientId: string): void {
+  const trimmedClientId = clientId.trim();
+  const validationError = validateGoogleClientId(trimmedClientId);
+  if (validationError) {
+    throw new Error(validationError);
+  }
+
+  console.log('[Google OAuth] Using Client ID:', trimmedClientId);
   const redirectUri = window.location.origin + '/';
   const params = new URLSearchParams({
-    client_id: clientId,
+    client_id: trimmedClientId,
     redirect_uri: redirectUri,
     response_type: 'token',
     scope: SHEETS_SCOPE,
@@ -167,56 +196,26 @@ export function startGoogleOAuthRedirect(clientId: string): void {
  * After Google redirects back, the access_token is in the URL hash.
  * Parse it and clean up the URL.
  */
-export function extractAccessTokenFromHash(): string | null {
-  const hash = window.location.hash;
-  if (!hash || !hash.includes('access_token')) return null;
+export function extractOAuthRedirectResult(): OAuthRedirectResult {
+  const hash = window.location.hash.startsWith('#') ? window.location.hash.substring(1) : '';
+  const hashParams = new URLSearchParams(hash);
+  const searchParams = new URLSearchParams(window.location.search);
+  const accessToken = hashParams.get('access_token');
+  const error = hashParams.get('error') || searchParams.get('error');
+  const errorDescription = hashParams.get('error_description') || searchParams.get('error_description');
 
-  const params = new URLSearchParams(hash.substring(1));
-  const token = params.get('access_token');
-
-  if (token) {
-    sessionStorage.setItem('gp_access_token', token);
-    // Clean the URL hash so it doesn't linger
-    window.history.replaceState(null, '', window.location.pathname + window.location.search);
+  if (accessToken) {
+    sessionStorage.setItem('gp_access_token', accessToken);
+    cleanupOAuthUrl();
+    return { accessToken, error: null, errorDescription: null };
   }
 
-  return token;
-}
+  if (error) {
+    cleanupOAuthUrl();
+    return { accessToken: null, error, errorDescription };
+  }
 
-/**
- * Legacy popup-based flow kept as fallback (desktop).
- * Prefer startGoogleOAuthRedirect for universal compatibility.
- */
-async function loadGoogleIdentityScript(): Promise<void> {
-  if (window.google?.accounts?.oauth2) return;
-  await new Promise<void>((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.defer = true;
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error('Failed to load Google Identity script'));
-    document.head.appendChild(script);
-  });
-}
-
-export async function requestGoogleAccessToken(clientId: string): Promise<string> {
-  await loadGoogleIdentityScript();
-  return await new Promise<string>((resolve, reject) => {
-    const tokenClient = window.google.accounts.oauth2.initTokenClient({
-      client_id: clientId,
-      scope: SHEETS_SCOPE,
-      callback: (response: any) => {
-        if (response?.error || !response?.access_token) {
-          reject(new Error(response?.error || 'Google OAuth failed'));
-          return;
-        }
-        sessionStorage.setItem('gp_access_token', response.access_token);
-        resolve(response.access_token);
-      },
-    });
-    tokenClient.requestAccessToken({ prompt: 'consent' });
-  });
+  return { accessToken: null, error: null, errorDescription: null };
 }
 
 export async function fetchValues(spreadsheetId: string, range: string, accessToken: string): Promise<string[][]> {
