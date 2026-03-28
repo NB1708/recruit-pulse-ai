@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { validateGoogleClientId } from '@/services/googleSheets';
 import { Key, FileSpreadsheet, Globe, Lightbulb } from 'lucide-react';
 
 interface ApiKeyModalProps {
@@ -14,6 +15,18 @@ export function ApiKeyModal({ open, onSubmit }: ApiKeyModalProps) {
   const [clientId, setClientId] = useState(sessionStorage.getItem('gp_client_id') || '');
   const [masterSheetId, setMasterSheetId] = useState(sessionStorage.getItem('gp_master_sheet_id') || '');
   const [eodSheetId, setEodSheetId] = useState(sessionStorage.getItem('gp_selection_eod_sheet_id') || '');
+  const [clientIdError, setClientIdError] = useState<string | null>(null);
+
+  const handleSubmit = () => {
+    const validationError = validateGoogleClientId(clientId);
+    if (validationError) {
+      setClientIdError(validationError);
+      return;
+    }
+
+    setClientIdError(null);
+    onSubmit(apiKey, clientId.trim(), masterSheetId.trim(), eodSheetId.trim());
+  };
 
   return (
     <Dialog open={open} onOpenChange={() => {}}>
@@ -53,9 +66,13 @@ export function ApiKeyModal({ open, onSubmit }: ApiKeyModalProps) {
             <Input
               placeholder="xxxx.apps.googleusercontent.com"
               value={clientId}
-              onChange={(e) => setClientId(e.target.value)}
+              onChange={(e) => {
+                setClientId(e.target.value);
+                if (clientIdError) setClientIdError(null);
+              }}
               className="bg-background border-border text-foreground placeholder:text-muted-foreground text-xs"
             />
+            {clientIdError && <p className="text-[11px] text-destructive">{clientIdError}</p>}
           </div>
           <div className="space-y-3">
             <div className="space-y-1.5">
@@ -98,7 +115,7 @@ export function ApiKeyModal({ open, onSubmit }: ApiKeyModalProps) {
           <Button
             className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-display"
             disabled={!apiKey.startsWith('gsk_') || !clientId.trim() || !masterSheetId.trim() || !eodSheetId.trim()}
-            onClick={() => onSubmit(apiKey, clientId.trim(), masterSheetId.trim(), eodSheetId.trim())}
+            onClick={handleSubmit}
           >
             Connect &amp; Launch
           </Button>
