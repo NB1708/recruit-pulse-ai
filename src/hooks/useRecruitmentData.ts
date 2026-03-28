@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { DEMO_MASTER_TRACKER, DEMO_EOD_SHEET, DEMO_SELECTION_SHEET } from '@/data/demoData';
-import { fetchRecruitmentSheets, requestGoogleAccessToken } from '@/services/googleSheets';
+import { fetchRecruitmentSheets, startGoogleOAuthRedirect } from '@/services/googleSheets';
 import type { EODSheetRow, MasterTrackerRow, SelectionSheetRow } from '@/types/recruitment';
 
 export function useRecruitmentData() {
@@ -11,19 +11,32 @@ export function useRecruitmentData() {
   const [error, setError] = useState<string | null>(null);
   const [connected, setConnected] = useState(false);
 
+  /** Redirect-based: saves config then redirects to Google */
   const connectGoogleSheets = async (clientId: string, masterSheetId: string, selectionEodSheetId: string) => {
+    sessionStorage.setItem('gp_client_id', clientId);
+    sessionStorage.setItem('gp_master_sheet_id', masterSheetId);
+    sessionStorage.setItem('gp_selection_eod_sheet_id', selectionEodSheetId);
+    // Mark that we're in the middle of an OAuth redirect
+    sessionStorage.setItem('gp_oauth_pending', 'true');
+    startGoogleOAuthRedirect(clientId);
+  };
+
+  /** Called after redirect returns with an access token */
+  const connectWithToken = async (accessToken: string) => {
+    const masterSheetId = sessionStorage.getItem('gp_master_sheet_id') || '';
+    const selectionEodSheetId = sessionStorage.getItem('gp_selection_eod_sheet_id') || '';
+    if (!masterSheetId || !selectionEodSheetId) {
+      setError('Sheet IDs not found. Please reconfigure.');
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
-      const accessToken = await requestGoogleAccessToken(clientId);
       const data = await fetchRecruitmentSheets(masterSheetId, selectionEodSheetId, accessToken);
       setMaster(data.master);
       setSelection(data.selection);
       setEod(data.eod);
       setConnected(true);
-      sessionStorage.setItem('gp_client_id', clientId);
-      sessionStorage.setItem('gp_master_sheet_id', masterSheetId);
-      sessionStorage.setItem('gp_selection_eod_sheet_id', selectionEodSheetId);
     } catch (e: any) {
       setError(e.message || 'Failed to connect Google Sheets');
       setConnected(false);
@@ -32,5 +45,5 @@ export function useRecruitmentData() {
     }
   };
 
-  return { master, selection, eod, loading, error, connected, connectGoogleSheets };
+  return { master, selection, eod, loading, error, connected, connectGoogleSheets, connectWithToken };
 }

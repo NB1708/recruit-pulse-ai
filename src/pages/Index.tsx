@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { extractAccessTokenFromHash } from '@/services/googleSheets';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { SplashScreen } from '@/components/SplashScreen';
@@ -32,9 +33,27 @@ const Index = () => {
   const [sheetError, setSheetError] = useState<string | null>(null);
 
   const { loading: aiLoading, error: aiError, generate, setupKey } = useAI();
-  const { master, selection, eod, loading: sheetLoading, error: hookSheetError, connected, connectGoogleSheets } = useRecruitmentData();
+  const { master, selection, eod, loading: sheetLoading, error: hookSheetError, connected, connectGoogleSheets, connectWithToken } = useRecruitmentData();
 
   const displayError = sheetError || hookSheetError;
+
+  // Handle OAuth redirect return
+  useEffect(() => {
+    const token = extractAccessTokenFromHash();
+    const isPending = sessionStorage.getItem('gp_oauth_pending') === 'true';
+
+    if (token && isPending) {
+      sessionStorage.removeItem('gp_oauth_pending');
+      // Restore API key
+      const savedApiKey = sessionStorage.getItem('groq_api_key') || '';
+      if (savedApiKey) setupKey(savedApiKey);
+      // Jump straight to dashboard and fetch data
+      setAppScreen('dashboard');
+      connectWithToken(token).catch((e: any) => {
+        setSheetError(e?.message || 'Failed to fetch sheet data after login.');
+      });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const years = useMemo(() => {
     const set = new Set(master.map(r => (r.year || '').trim()).filter(Boolean));
@@ -47,24 +66,8 @@ const Index = () => {
     sessionStorage.setItem('gp_master_sheet_id', masterSheetId);
     sessionStorage.setItem('gp_selection_eod_sheet_id', selectionEodSheetId);
     setupKey(apiKey);
-    setAppScreen('dashboard');
-
-    // Trigger Google Sheets connection automatically
-    try {
-      setSheetError(null);
-      await connectGoogleSheets(clientId, masterSheetId, selectionEodSheetId);
-    } catch (e: any) {
-      const msg = e?.message || '';
-      if (msg.includes('401') || msg.includes('403')) {
-        setSheetError('Authentication failed. Please reconnect your Google account.');
-      } else if (msg.includes('429')) {
-        setSheetError('Google API limit reached. Try again in a few minutes.');
-      } else if (msg.includes('404') || msg.includes('Invalid')) {
-        setSheetError('Invalid Sheets ID. Please check and reconnect.');
-      } else {
-        setSheetError(msg || 'Failed to connect Google Sheets.');
-      }
-    }
+    // This will redirect to Google OAuth — page will unload
+    await connectGoogleSheets(clientId, masterSheetId, selectionEodSheetId);
   };
 
   const handleSettingsSave = (apiKey: string, masterSheetId: string, selectionEodSheetId: string) => {
@@ -82,24 +85,32 @@ const Index = () => {
       setSettingsOpen(true);
       return;
     }
-    try {
-      setSheetError(null);
+    // Try using existing token first, else redirect
+    const existingToken = sessionStorage.getItem('gp_access_token');
+    if (existingToken) {
+      try {
+        setSheetError(null);
+        await connectWithToken(existingToken);
+      } catch {
+        // Token expired, redirect for new one
+        await connectGoogleSheets(clientId, masterSheetId, selectionEodSheetId);
+      }
+    } else {
       await connectGoogleSheets(clientId, masterSheetId, selectionEodSheetId);
-    } catch (e: any) {
-      setSheetError(e?.message || 'Failed to reconnect.');
     }
   };
 
   const handleRefresh = async () => {
-    const clientId = sessionStorage.getItem('gp_client_id') || '';
-    const masterSheetId = sessionStorage.getItem('gp_master_sheet_id') || '';
-    const selectionEodSheetId = sessionStorage.getItem('gp_selection_eod_sheet_id') || '';
-    if (!clientId || !masterSheetId || !selectionEodSheetId) return;
+    const existingToken = sessionStorage.getItem('gp_access_token');
+    if (!existingToken) {
+      setSheetError('No active session. Please reconnect Google Sheets.');
+      return;
+    }
     try {
       setSheetError(null);
-      await connectGoogleSheets(clientId, masterSheetId, selectionEodSheetId);
+      await connectWithToken(existingToken);
     } catch (e: any) {
-      setSheetError(e?.message || 'Sync failed.');
+      setSheetError(e?.message || 'Sync failed. Try reconnecting.');
     }
   };
 
